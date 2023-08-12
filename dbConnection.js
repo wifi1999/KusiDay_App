@@ -14,3 +14,6 @@ async function dbConnect(){
     }
 }
 module.exports = dbConnect;
+
+// ... (your db connection logic)
+// module.exports = client; // Export the client instance
