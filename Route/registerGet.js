@@ -1,5 +1,5 @@
 const registerGet = (req, res) => { 
-         res.render('register.ejs');
+    res.render('register.ejs');
 }
 
 module.exports = registerGet;

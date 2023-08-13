@@ -1,4 +1,38 @@
-<h1>Personal Detail</h1>
-<p><%= name %></p>
-<!-- Add more content as needed -->
+<!-- <h1>Personal Detail</h1>
+
+<label for="name">Name: </label><input type="text"><br><br>
+<label for="phone">Phone: </label><input type="text"><br><br>
+<label for="email">Email: </label><input type="text"><br><br>
+<label for="address">Address: </label><input type="text"><br><br>
+ -->
+
+ <!-- <form action="/profile" enctype="multipart/form-data" method="post">
+    <div class="form-group">
+      <input type="file" class="form-control-file" name="avatar">
+      <input type="submit" value="Upload Avatar" class="btn btn-default">            
+    </div>
+  </form> -->
+
+  <div class="avatar-section">
+    <% if (avatar) { %>
+        <img src="data:<%= avatar.contentType %>;base64,<%= avatar.data.toString('base64') %>" alt="Avatar">
+    <% } 
+        else { %>
+            <form action="/profile" enctype="multipart/form-data" method="post">
+                <div class="form-group">
+                <input type="file" class="form-control-file" name="avatar">
+                <input type="submit" value="Upload Avatar" class="btn btn-default">            
+                </div>
+            </form>
+        <% } %>
+  </div>
+
+  <style>
+     .avatar-image {
+        width: 25vw; /* 25% of viewport width */
+        height: auto; /* Maintain aspect ratio */
+    }
+  </style>
+  
+ 
 

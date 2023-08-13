@@ -1,33 +1,24 @@
-const express = require('express'); // Express Web framework for Node.js
+const express = require('express'); 
+const app = express(); 
 const dotenvConfig = require('dotenv').config(); 
-const dbConnect = require('./dbConnection');
+const passport = require('passport'); 
+const flash = require('express-flash'); 
+const session = require('express-session'); 
+const methodOverride = require('method-override'); 
 const initializePassport = require('./passport-config'); 
-const bcrypt = require('bcrypt'); // Library for hashing password
-const passport = require('passport'); // Authentication middleware for Node.js
-const flash = require('express-flash'); // Flash message middleware for Node.js
-const session = require('express-session'); // Session middleware for Node.js
-const methodOverride = require('method-override'); // Middleware to override HTTP request
-
+const {checkAuthenticated, checkNotAuthenticated} = require('./AuthFunc/authFunc.js');
+const {getUserByEmail, getUserById} = require('./GetUser/getUser.js');
 const registerGet = require('./Route/registerGet.js');
 const registerPost = require('./Route/registerPost.js');
+const homeGet = require('./Route/homeGet.js');
+const loginGet = require('./Route/loginGet.js');
+const loginPost = require('./Route/loginPost.js');
+const logout = require('./Route/logout.js');
 
-// const users = [];
-let client; (async () => {client = await dbConnect();})(); // dbConnection
-
-
-// const getUserByEmail = email => users.find(user => user.email === email);
-// const getUserById = id => users.find(user => user.id === id);
-// const insertUser = async (client, newUser) => { const result = await client.db("user").collection("user_registration_login").insertOne(newUser);};
-const getUserByEmail = async (email) => await client.db("user").collection('user_registration_login').findOne({email: email});
-const getUserById = async (id) => await client.db("user").collection('user_registration_login').findOne({id: id});
-
-const checkAuthenticated = async (req, res, next) => req.isAuthenticated() ? next() : res.redirect('./login');
-const checkNotAuthenticated = async (req, res, next) =>  req.isAuthenticated() ? res.redirect('/') : next();
+const dbConnect = require('./dbConnection.js');
 
 
 initializePassport(passport, getUserByEmail, getUserById); // passportConfiguration
-
-const app = express(); // app instance for routes definition
 
 app.set('view-engine', 'ejs'); // setting view-engine for Express to 'ejs', which is use dto render HTML page
 app.use(express.urlencoded({ extended: false })); // Allows the application to access form data submitted in POST requests via req.body.
@@ -37,63 +28,62 @@ app.use(passport.initialize()); // Initialize Passport.js to manage authenticati
 app.use(passport.session()); // Initialize Passport.js session handling
 app.use(methodOverride('_method')); // Middleware to override HTTP methods based on the '_method' parameter in the query string.
 
-app.get('/', checkAuthenticated,  async (req, res) => { // home page, passes user's name to the view
-    res.render('index.ejs', { name: (await req.user).name });
-});
-
-// app.get('/register', checkNotAuthenticated, (req, res) => { // register page, register.ejs view if user not authenticated
-//     res.render('register.ejs');
-// });
 
 app.get('/register', checkNotAuthenticated, registerGet);
-
-// app.post('/register', checkNotAuthenticated, async (req, res) => { // handle register form submission. Add user to database
-//     try{
-//         (async () => {client = await dbConnect();})();
-//         const hashedPassword = await bcrypt.hash(req.body.password, 10);
-//         const newUser = { id: Date.now().toString(), name: req.body.name, email: req.body.email, password: hashedPassword };
-//         await insertUser(client, newUser);
-//         // users.push(newUser);
-        
-//         await client.close();
-//         res.redirect('/login'); // Redirect to the login page after successful registration.
-//     }
-//     catch(err){
-//         console.error('Error registering user:', err);
-//         res.redirect('/register'); // Redirect to the register page on error (e.g., hashing failure).
-//     }
-// });
-
-
-
-
 app.post('/register', checkNotAuthenticated, registerPost);
+app.get('/login', checkNotAuthenticated, loginGet);
+app.post('/login', checkNotAuthenticated, loginPost);
+app.get('/', checkAuthenticated, homeGet);
+app.delete('/logout', logout);
 
-app.get('/login', checkNotAuthenticated, (req, res) => { // login page, login.ejs view if user not authenticated
-    res.render('login.ejs');
-});
+const multer  = require('multer');
+const upload = multer();
 
-app.post('/login', checkNotAuthenticated, passport.authenticate('local', { // handle login form submission (passport local strategy) 
-    successRedirect: '/',
-    failureRedirect: '/login',
-    failureFlash: true
-}));
+app.post('/profile', upload.single('avatar'), async (req, res) => {
+  if (req.isAuthenticated()) {
+    try { // add to database
+        const insertAvatar = async (client, newAvatar) => { 
+            await client.db("user").collection("user_avatar").insertOne(newAvatar);
+        };
+        
+        const client = await dbConnect();
+        const newAvatar = { userId: (await req.user).id, data: req.file.buffer, contentType: req.file.mimetype };
+        await insertAvatar(client, newAvatar);
+        await client.close();
 
-app.delete('/logout', (req, res) => { // Handling the logout request. Logs out the user and redirects to the login page.
-    req.logout((err) => {
-        if (err) {
-            console.error(err);
-            return res.redirect('/');
-        }
-        res.redirect('/login');
-    });
+        console.log('Avatar uploaded to MongoDB successfully');
+
+        res.redirect('/profile');
+    } 
+    catch (error) {
+        console.error('Error uploading avatar:', error);
+        res.redirect('/profile');
+    }
+  } 
+  else {
+    res.redirect('/login');
+  }
 });
 
 app.get('/profile', checkAuthenticated, async (req, res) => {
-    res.render('profile.ejs', { name: (await req.user).name });
+    try{
+        const client = await dbConnect();
+        const fetchUser = await client.db("user").collection('user_avatar').findOne({userId: (await req.user).id});
+        res.render('profile.ejs', {avatar: fetchUser});
+    }
+    catch(err){
+        console.error(err);
+    }
 });
 
+
 app.listen(3000, () => console.log('Server listen on port 3000')); 
+
+
+
+
+
+
 
 
 

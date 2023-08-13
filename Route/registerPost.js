@@ -2,7 +2,7 @@ const dbConnect = require('../dbConnection.js');
 const bcrypt = require('bcrypt');
 
 const insertUser = async (client, newUser) => { 
-    const result = await client.db("user").collection("user_registration_login").insertOne(newUser);
+    await client.db("user").collection("user_registration_login").insertOne(newUser);
 };
 
 const registerPost = async (req, res) => { // handle register form submission. Add user to database
