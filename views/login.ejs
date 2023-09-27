@@ -1,20 +1,124 @@
-<h1>Login</h1>
+<div class="login-container">
 
-<% if (messages.error) {%> <!-- This line indicates a server-side script using <% %> delimiters.  -->
-<%= messages.error %>
-<% } %>
+    <h1 class="login-font">Login</h1>
 
-<form action="/login" method="POST">
-   <div>
-       <label for="email">Email</label><input type="email" id="email" name="email" required>
-   </div>
+    <% if (messages.error) {%> 
+        <%= messages.error %>
+    <% } %>
 
-   <div>
-       <label for="password">Password</label><input type="password" id="name" name="password" required>
-   </div>
+    <form action="/login" method="POST">
+    <div>
+        <label for="email" class="email-font">Email</label>
+        <input type="email" id="email" name="email" required>
+    </div>
 
-   <button type="submit">Login</button>
-</form>
+    <div>
+        <label for="password" class="password-font">Password</label>
+        <input type="password" id="name" name="password" required>
+    </div>
 
-<a href="/register">Register</a>
+    <button type="submit">Login</button>
+    </form>
+    
+    <a class="register-link" href="/register">Don't have an account? Register here.</a>
+
+</div>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #56410b;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+
+    button[type="submit"] {
+        background-color: #56410b; /* Background color */
+        color: #e8af1d; /* Text color */
+        font-size: 18px; /* Font size */
+        padding: 10px 20px; /* Padding for the button */
+        border: none; /* Remove the default border */
+        border-radius: 100px; /* Rounded corners */
+        cursor: pointer; /* Change cursor on hover */
+        transition: background-color 0.3s ease; /* Smooth transition effect */
+        font-weight: bold;
+    }
+
+    .login-font{
+        font-family: Georgia, serif;
+    }
+
+    .email-font{
+        font-family: Georgia, serif;
+        font-size: 20px;
+        font-weight: bold;
+    }
+
+    .password-font{
+        font-family: Georgia, serif;
+        font-size: 20px;
+        font-weight: bold;
+        margin-left: -40px;
+    }
+
+    #email{
+        height: 21px;
+    }
+
+    .login-container {
+        background-color: #f6b71a;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border-radius: 100px;
+        padding: 20px;
+        width: 600px;
+        text-align: center;
+    }
+
+    .login-container h1 {
+        font-size: 28px;
+        margin-bottom: 20px;
+    }
+
+    .login-form {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .login-form label {
+        font-weight: bold;
+        margin-bottom: 6px;
+    }
+
+    .login-form input {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        margin-bottom: 16px;
+    }
+
+    .login-form button {
+        background-color: #4285f4;
+        color: #ffffff;
+        padding: 10px;
+        border-radius: 100px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s;
+    }
+
+    .login-form button:hover {
+        background-color: #3367d6;
+    }
+
+    .register-link {
+        margin-top: 10px;
+        font-size: 16px;
+        color: black;
+        text-decoration: none;
+        font-weight: bold;
+    }
+</style>
 

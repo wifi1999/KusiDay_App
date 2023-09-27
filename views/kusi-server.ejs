@@ -1,0 +1,201 @@
+<body>
+    <div class="logo-options">
+        <%- include('Logo.ejs') %>
+
+        <form action="/logout?_method=DELETE" method="POST">
+            <button type="submit" class="logout-btn">⎋</button>         
+        </form>
+
+        <div class="location">
+            <button id="find-me" class="fancy-button">📍</button>
+            <p id="status"></p>
+            <a id="map-link" target="_blank"></a>
+        </div>
+        
+        <h2 class="slogan">Kusi Mate, Kusi Day~</h2>
+        
+        <a href="/notification" class="notification">🔔</a>
+        <a href="http://localhost:3001" class="message">💌</a>
+    </div>
+
+
+    <div class="profile-friend">
+        <div class="container">
+            <div class="profile-frame">
+                <div class="profile-line">
+                    <% if (avatar) { %>
+                        <div class="avatar-name">
+                            <img src="data:<%= avatar.contentType %>;base64,<%= avatar.data.toString('base64') %>"
+                                alt="Avatar" class="avatar-image">
+                            <div class="profile-name">
+                                <%= avatar.name %>
+                            </div>
+                        </div>
+                        <% } %>
+
+                            <a href="/profile" class="profile">👤</a> <br>
+
+                </div>
+                <hr class="under_line">
+
+                <div class="location">
+                    <button id="find-me" class="fancy-button">📍</button><br />
+                    <p id="status"></p>
+                    <a id="map-link" target="_blank"></a>
+                </div>
+                <hr class="underline">
+                <h3>Who viewed your profile: </h3>
+                <h3>Impression of your post: </h3>
+                <hr class="underline">
+
+                <a href="/search" class="search">🔍</a> <br><br><br><br><br><br><br><br>
+                <a href="/friend" class="friend">👥</a><br><br>
+            </div>
+            <div class="friend-frame"></div>
+        </div>
+
+        <div class="feed-ads">
+            <div class="feed">
+                <div class="role">
+                    <button id="server" class="server">Kusi-Server</button>
+                    <button id="feeds" class="feeds">Kusi-Feeds</button>
+                    <button id="requester" class="requester">Kusi-Client</button>
+                </div>
+
+                <div class="feed-frame">
+                    <div class="avatar-feed">
+                        <% if (avatar) { %>
+                            <img src="data:<%= avatar.contentType %>;base64,<%= avatar.data.toString('base64') %>"
+                                alt="Avatar" class="avatar-image-feed">
+                        <% } %>
+                            <input type="text" class="feed-input" placeholder="What's in your mind?">
+                            <button class="send-feed">Submit</button>
+                    </div>
+                    <br>
+                    <hr class="underline">
+                </div>
+
+                <div class="feed-post"> 
+                    <input type="hidden" id="avatarData" value="<%= avatar ? avatar.data.toString('base64') : '' %>">
+                </div>
+            </div>
+
+            <div>
+                <div class="ads-frame"></div>
+            </div>
+
+        </div>
+
+        <%- include('style.ejs') %>
+
+</body>
+
+<script>  
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const feedsButton = document.getElementById("feeds"); // 
+        const serverButton = document.getElementById("server");
+        const requesterButton = document.getElementById("requester");
+        const feedFrame = document.querySelector(".feed-frame");
+        const feedPost = document.querySelector(".feed-post");
+        const feedInput = document.querySelector(".feed-input");
+        const avatarDataInput = document.querySelector("#avatarData");
+        const status = document.querySelector("#status");
+        const mapLink = document.querySelector("#map-link");
+        
+        function navigateToPage(page){ 
+            window.location.href = `./${page}`; 
+        }
+        
+        feedsButton.addEventListener("click", () => navigateToPage("login"));
+        serverButton.addEventListener("click", () => navigateToPage("kusi-server"));
+        requesterButton.addEventListener("click", () => navigateToPage("kusi-client"));
+
+        function submitFeed() {
+            const feedContent = feedInput.value.trim();
+            if(feedContent !== ""){
+                const newFeedPost = createFeedPost(feedContent);
+                feedPost.appendChild(newFeedPost);
+                feedInput.value = "";
+            }
+        }
+
+        function createFeedPost(feedContent) {
+            const newFeedPost = document.createElement("div");
+            newFeedPost.classList.add("feed-post-item");
+
+            if (avatarDataInput.value) { // add avatar
+                const newAvatarImage = new Image();
+                newAvatarImage.src = "data:image/jpeg;base64," + avatarDataInput.value;
+                newAvatarImage.classList.add("small-avatar");
+                newFeedPost.appendChild(newAvatarImage);
+            }
+
+            const feedText = document.createElement("p"); // add user text 
+            feedText.textContent = feedContent;
+            feedText.style.fontSize = "30px";
+            newFeedPost.appendChild(feedText);
+
+            const newPost = createNewPost(newFeedPost); // add buttons
+            newFeedPost.appendChild(newPost);
+
+            return newFeedPost;
+        }
+
+        function createNewPost(post) {
+            const newPostContainer = document.createElement("div"); 
+            newPostContainer.classList.add("new-post-container");
+
+            const deleteButton = createButton('Delete', "delete-button", () => {
+                feedPost.removeChild(post);
+            });
+            const giveServiceButton = createButton("Give service", "get-service-button");
+
+            newPostContainer.appendChild(deleteButton);
+            newPostContainer.appendChild(giveServiceButton);
+            return newPostContainer;
+        }   
+
+        function createButton(text, className, clickHandler){
+            const button = document.createElement("button");
+            button.textContent = text;
+            button.classList.add(className);
+            if(clickHandler) button.addEventListener("click", clickHandler);
+            return button;
+        }
+    
+        function geoFindMe() {
+            mapLink.href = "";
+            mapLink.textContent = "";
+        
+            function success(position) {
+                const {latitude, longitude} = position.coords;  
+                status.textContent = "";
+                mapLink.href = `https://www.openstreetmap.org/#map=18/${latitude}/${longitude}`;
+                mapLink.textContent = `Latitude: ${latitude} °, Longitude: ${longitude} °`;   
+                mapLink.style.color = "#808000"; 
+                mapLink.style.fontWeight = "bold";  
+                mapLink.style.marginLeft = '10px';
+            }
+        
+            function error() {
+                status.textContent = "Unable to retrieve your location";
+            }
+        
+            if (!navigator.geolocation) {
+                status.textContent = "Geolocation is not supported by your browser";
+            } 
+            else {
+                status.textContent = "Locating…";
+                navigator.geolocation.getCurrentPosition(success, error);
+            }
+        }
+
+        document.querySelector("#find-me").addEventListener("click", geoFindMe);
+        document.querySelector(".send-feed").addEventListener("click", submitFeed);
+    });
+    
+</script>
+    
+    
+    

@@ -1,38 +1,242 @@
-<!-- <h1>Personal Detail</h1>
-
-<label for="name">Name: </label><input type="text"><br><br>
-<label for="phone">Phone: </label><input type="text"><br><br>
-<label for="email">Email: </label><input type="text"><br><br>
-<label for="address">Address: </label><input type="text"><br><br>
- -->
-
- <!-- <form action="/profile" enctype="multipart/form-data" method="post">
-    <div class="form-group">
-      <input type="file" class="form-control-file" name="avatar">
-      <input type="submit" value="Upload Avatar" class="btn btn-default">            
-    </div>
-  </form> -->
-
-  <div class="avatar-section">
-    <% if (avatar) { %>
-        <img src="data:<%= avatar.contentType %>;base64,<%= avatar.data.toString('base64') %>" alt="Avatar">
+<h1>Personal Detail</h1>
+  <div class="profile-section">
+    <% if (!avatar) { %>
+      <form action="/profile" enctype="multipart/form-data" method="post">
+        <div class="form-group">
+          <input type="file" class="form-control-file" name="avatar" required><br><br>
+          <label for="name" class="detail-text">Name: </label><input type="text" name="name" required><br><br>
+          <label for="phone" class="detail-text">Phone: </label><input type="text" name="phone" required><br><br>
+          <label for="email" class="detail-text">Email: </label><input type="text" name="email" required><br><br>
+          <label for="address" class="detail-text">Address: </label><input type="text" name="address" required><br><br>
+          <input type="submit" value="Update Profile" class="update-profile-button">            
+        </div>
+    </form>
+    <a href="/">Back</a>
     <% } 
         else { %>
-            <form action="/profile" enctype="multipart/form-data" method="post">
-                <div class="form-group">
-                <input type="file" class="form-control-file" name="avatar">
-                <input type="submit" value="Upload Avatar" class="btn btn-default">            
-                </div>
-            </form>
-        <% } %>
+          <div class="profile-info"></div>
+          <img src="data:<%= avatar.contentType %>;base64,<%= avatar.data.toString('base64') %>" alt="Avatar" class="avatar-image">
+          <div class="user-details">
+            <div><strong>Name: <span class="detail-text"><%= avatar.name %></span></strong></div>
+            <div><strong>Phone: <span class="detail-text"><%= avatar.phone %></span></strong></div>
+            <div><strong>Email: <span class="detail-text"><%= avatar.email %></span></strong></div>
+            <div><strong>Address: <span class="detail-text"><%= avatar.address %></span></strong></div>
+          </div>
+          
+          <a href="/">Back</a>
+        <% } %> 
   </div>
 
-  <style>
-     .avatar-image {
-        width: 25vw; /* 25% of viewport width */
-        height: auto; /* Maintain aspect ratio */
+  <div class="rectangular-box">
+      <input type="text" class="feeds-input">
+      <button class="submit">Submit</button>
+
+      <input type="file" id="image-upload" accept="image/*">
+      <input type="file" id="video-upload" accept="video/*">
+
+      <div class="feeds-output"></div>
+
+      <input type="hidden" id="avatarData" value="<%= avatar ? avatar.data.toString('base64') : '' %>">
+
+  </div>
+
+<style>
+  .user-name{
+      margin-left:15px;
+  }
+
+  .profile_avatar_name{
+      display: flex;
+  }
+
+  .feeds-output{
+      width: 900px;
+      height: 1000px;
+      margin-top: 30px;
+      overflow: auto;
+  }
+
+  .submit{
+    height: 100px;
+    width: 200px;
+  }
+
+  .uploaded-image{
+    height: 500px;
+    width: 600px;
+  }
+
+  .uploaded-video{
+    height: 500px;
+    width: 600px;
+  }
+
+  .feeds-input{
+    width: 900px;
+    height: 100px;
+    margin-top: 30px;
+    font-size: 30px;
+  }
+
+  .rectangular-box {
+    width: 1300px; /* Adjust width as needed */
+    height: 13000px; /* Adjust height as needed */
+    border: 2px solid #000; /* Border style */
+    padding: 20px; /* Adjust padding as needed */
+    margin: 20px auto; /* Center the box horizontally */
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); /* Add a shadow effect */
+    background-color: white; /* Background color */
+    margin-top: 100px;
+    max-height: none;
+    overflow: auto;
+  }
+
+  .profile-section {
+    display: flex;
+  }
+
+  .avatar-image {
+    width: 20vw;
+    height: auto; /* Maintain aspect ratio */
+    /* fill the container, preserving aspect ratio, and cropping to fit */
+    /* border-radius: 50%; Make the image circular */
+    overflow: hidden; /* Hide any overflowing content */
+    /* width: 300px;
+    height: 300px; */
+  }
+
+  .small-avatar{
+    /* width: 25vw; /* 25% of viewport width */
+    /* height: auto; Maintain aspect ratio */ 
+    /* fill the container, preserving aspect ratio, and cropping to fit */
+    border-radius: 50%; /* Make the image circular */
+    overflow: hidden; /* Hide any overflowing content */
+    width: 100px;
+    height: 100px;
+  }
+
+  .user-details {
+    margin-left: 20px; 
+  }
+
+  .detail-text {
+    font-size: 25px; 
+    font-family: "Dancing Script", cursive;
+    font-weight: normal; 
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const feedsInput = document.querySelector(".feeds-input");
+    const submitButton = document.querySelector(".submit");
+    const feedsDiv = document.querySelector(".feeds-output");    
+    const avatarDataInput = document.querySelector("#avatarData");
+
+    const uploadImage = document.querySelector("#image-upload");
+    const uploadVideo = document.querySelector("#video-upload");
+
+    submitButton.addEventListener("click", function () {
+      const inputValue = feedsInput.value.trim();
+      if (inputValue) {
+        const feedItem = createFeedItem(inputValue);
+        
+        // new add...
+        const isImageUploaded = uploadImage.files.length > 0;
+        const isVideoUploaded = uploadVideo.files.length > 0;
+
+        if(isImageUploaded && isVideoUploaded){
+            alert("Please upload either an image or a video, but not both.");
+            return;
+        }
+        else if(isImageUploaded){
+            const file = uploadImage.files[0];
+            const previewElement = document.createElement("img");
+            previewElement.classList.add("uploaded-image");
+            previewElement.src = URL.createObjectURL(file);
+
+            feedItem.appendChild(previewElement);
+        }
+        else if(isVideoUploaded){
+            const file = uploadVideo.files[0];
+            const previewElement = document.createElement("video");
+            previewElement.classList.add("uploaded-video");
+            previewElement.src = URL.createObjectURL(file);
+            previewElement.setAttribute("controls", "true");
+            feedItem.appendChild(previewElement);
+        }
+        
+        // if(uploadImage.files.length > 0){
+        //     const file = uploadImage.files[0];
+        //     const previewElement = document.createElement("img");
+        //     previewElement.classList.add("uploaded-image");
+        //     previewElement.src = URL.createObjectURL(file);
+
+        //     feedItem.appendChild(previewElement);
+        // }
+
+        feedsDiv.insertBefore(feedItem, feedsDiv.firstChild); // prepend the new feed item to the top of the feedsDiv
+
+        feedsInput.value = "";
+        uploadImage.value = ""; // Clear the image input
+        uploadVideo.value = ""; // Clear the video input
+      }
+    });
+
+    function createFeedItem(content) {
+      const feedItem = document.createElement("div");
+      feedItem.classList.add("feed-item");
+
+      if (avatarDataInput.value) {
+        const avatarWithName = createAvatarWithName();
+        feedItem.appendChild(avatarWithName);
+      }
+
+      const textContent = document.createElement("p");
+      textContent.textContent = content;
+      textContent.style.fontSize = "30px";
+      feedItem.appendChild(textContent);
+
+      const deleteButton = createDeleteButton(feedItem);
+      feedItem.appendChild(deleteButton);
+
+      return feedItem;
     }
-  </style>
+
+    function createAvatarWithName() {
+      const avatarWithName = document.createElement("div");
+      avatarWithName.classList.add("profile_avatar_name");
+
+      const newAvatarImage = new Image();
+      newAvatarImage.src = "data:image/jpeg;base64," + avatarDataInput.value;
+      newAvatarImage.classList.add("small-avatar");
+
+      avatarWithName.appendChild(newAvatarImage);
+
+      if ("<%= avatar %>") {
+        const userName = document.createElement("p");
+        userName.classList.add('user-name');
+        userName.textContent = "<%= typeof avatar !== 'undefined' && avatar !== null ? avatar.name : '' %>";
+        userName.style.fontWeight = "bold";
+        avatarWithName.appendChild(userName);
+      }
+
+      return avatarWithName;
+    }
+
+    function createDeleteButton(feedItem) {
+      const deleteButton = document.createElement("button");
+      deleteButton.textContent = "Delete";
+      deleteButton.classList.add("delete-button");
+      deleteButton.addEventListener("click", function () {
+        feedsDiv.removeChild(feedItem);
+      });
+      return deleteButton;
+    }
+
+  });
+</script>
+  
   
  
 

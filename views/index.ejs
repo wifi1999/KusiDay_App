@@ -1,7 +1,92 @@
-<h1>Hi <%= name %> </h1>
-<form action="/logout?_method=DELETE" method="POST">
-    <button type="submit">Log Out</button>
-</form>
+<body>
+    <div class="logo-options">
+        <%- include('Logo.ejs') %>
 
-<!-- Add the profile link -->
-<a href="/profile">Profile</a>
+        <form action="/logout?_method=DELETE" method="POST">
+            <button type="submit" class="logout-btn">⎋</button>         
+        </form>
+
+        <div class="location">
+            <button id="find-me" class="fancy-button">📍</button>
+            <p id="status"></p>
+            <a id="map-link" target="_blank"></a>
+        </div>
+        
+        <h2 class="slogan">Kusi Mate, Kusi Day~</h2>
+        
+        <a href="/notification" class="notification">🔔</a>
+        <a href="http://localhost:3001" class="message">💌</a>
+    </div>
+
+
+    <div class="profile-friend">
+        <div class="container">
+            <div class="profile-frame">
+                <div class="profile-line">
+                    <% if (avatar) { %>
+                        <div class="avatar-name">
+                            <img src="data:<%= avatar.contentType %>;base64,<%= avatar.data.toString('base64') %>"
+                                alt="Avatar" class="avatar-image">
+                            <div class="profile-name">
+                                <%= avatar.name %>
+                            </div>
+                        </div>
+                    <% } %>
+
+                    <a href="/profile" class="profile">👤</a> <br>
+
+                </div>
+                <hr class="under_line">
+                <br><br><br><br>
+
+                <hr class="underline">
+                <h3>Who viewed your profile: </h3>
+                <h3>Impression of your post: </h3>
+                <hr class="underline">
+
+                <a href="/search" class="search">🔍</a> <br><br><br><br><br><br><br><br>
+                <a href="/friend" class="friend">👥</a><br><br>
+            </div>
+            <div class="friend-frame"></div>
+        </div>
+
+        <div class="feed-ads">
+            <div class="feed">
+                <div class="role">
+                    <button id="server" class="server">Kusi-Server</button>
+                    <button id="feeds" class="feeds">Kusi-Feeds</button>
+                    <button id="requester" class="requester">Kusi-Client</button>
+                </div>
+
+                <div class="feed-frame">
+                    <div class="avatar-feed">
+                        <% if (avatar) { %>
+                            <img src="data:<%= avatar.contentType %>;base64,<%= avatar.data.toString('base64') %>"
+                                alt="Avatar" class="avatar-image-feed">
+                        <% } %>
+                             
+                            <input type="text" class="feed-input" placeholder="What's in your mind?">               
+                            <button class="send-feed">Submit</button>
+                    </div>
+                    <br>
+                 
+                    <input type="file" id="image-upload" accept="image/*" />
+                    <input type="file" id="video-upload" accept="video/*" />
+
+                    <hr class="underline">
+                </div>
+
+                <div class="feed-post" id="post-container"> 
+                    <input type="hidden" id="avatarData" value="<%= avatar ? avatar.data.toString('base64') : '' %>">
+                </div>
+            </div>
+
+            <div>
+                <div class="ads-frame"></div>
+            </div>
+
+        </div>
+
+        <%- include('style.ejs') %>
+        <%- include('script.ejs') %>
+</body>

@@ -1,0 +1,214 @@
+<script type="module">
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
+    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
+    const firebaseConfig = {
+        apiKey: "AIzaSyBjOkI2pFpVJM0LjBbfr8lmfINwoD4JfDs",
+        authDomain: "kusiday-934d3.firebaseapp.com",
+        databaseURL: "https://kusiday-934d3-default-rtdb.firebaseio.com",
+        projectId: "kusiday-934d3",
+        storageBucket: "kusiday-934d3.appspot.com",
+        messagingSenderId: "968980863926",
+        appId: "1:968980863926:web:c4ffe72bbfa97ad4a57f17"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    
+    document.addEventListener("DOMContentLoaded", function() {
+      // localStorage.clear();
+      const feedsButton = document.getElementById("feeds");
+      const serverButton = document.getElementById("server");
+      const requesterButton = document.getElementById("requester");
+      const feedPost = document.querySelector(".feed-post");
+      const feedInput = document.querySelector(".feed-input");
+      const avatarDataInput = document.querySelector("#avatarData");
+      const status = document.querySelector("#status");
+      const mapLink = document.querySelector("#map-link");
+      const uploadedImage = document.querySelector("#image-upload");
+      const uploadedVideo = document.querySelector("#video-upload");
+
+      console.log(avatarDataInput.value);
+
+      function navigateToPage(page) {
+          window.location.href = `./${page}`;
+      }
+  
+      feedsButton.addEventListener("click", () => navigateToPage("login"));
+      serverButton.addEventListener("click", () => navigateToPage("kusi-server"));
+      requesterButton.addEventListener("click", () => navigateToPage("kusi-client"));
+
+      function appendUploadedFile(uploadedElement, className, parentElement) {
+          if (uploadedElement.files.length > 0) {
+              const file = uploadedElement.files[0];
+              const previewElement = document.createElement(file.type.startsWith("image/") ? "img" : "video");
+              previewElement.classList.add(className);
+              previewElement.src = URL.createObjectURL(file);
+              
+              if (file.type.startsWith("video/")) previewElement.setAttribute("controls", "true");
+              parentElement.appendChild(previewElement);
+              uploadedElement.value = "";
+          }
+      }
+
+      // new added...
+      function savePostToLocalStorage(postHTML){
+          // const storedPosts = JSON.parse(localStorage.getItem('userPosts')) || [];
+          // storedPosts.push(postHTML);
+          // localStorage.setItem("userPosts", JSON.stringify(storedPosts));
+
+          get(ref(db, 'posts')).then((snapshot) => {
+              const userPostsData = snapshot.val() || {};
+              console.log(userPostsData);
+              const storedPosts = userPostsData.userPosts === undefined ? [] : JSON.parse(userPostsData.userPosts);
+              console.log(storedPosts);
+              storedPosts.push(postHTML);
+              console.log(storedPosts);
+              const data = { userPosts : JSON.stringify(storedPosts)};
+              console.log(data);
+              set(ref(db, 'posts'), data);
+          });
+      }
+  
+      function submitFeed() {
+        const feedContent = feedInput.value.trim();
+        if (feedContent !== "") {
+          const newFeedPost = createFeedPost(feedContent);
+          feedPost.insertBefore(newFeedPost, feedPost.firstChild);
+          feedInput.value = "";
+
+          // new added..
+          savePostToLocalStorage(newFeedPost.outerHTML);
+
+        }
+      }
+  
+      function createFeedPost(content) {
+        const newFeedPost = document.createElement("div");
+        newFeedPost.classList.add("feed-post-item");
+        newFeedPost.style.backgroundColor = "#FFF5E1";
+
+        function createAvatarWithName() {
+            const avatar_with_name = document.createElement("div");
+            avatar_with_name.classList.add("avatar_with_name");
+    
+            if ("<%= avatar %>") {
+                const userName = document.createElement("p");
+                userName.classList.add("user-name");
+                userName.textContent = "<%= typeof avatar !== 'undefined' && avatar !== null ? avatar.name : '' %>";
+                userName.style.fontWeight = "bold";
+
+                function createAvatarImage() {
+                    const newAvatarImage = new Image();
+                    newAvatarImage.classList.add("small-avatar");
+                    newAvatarImage.src = "data:image/jpeg;base64," + avatarDataInput.value;
+                    return newAvatarImage;
+                }
+
+                avatar_with_name.appendChild(createAvatarImage());
+                avatar_with_name.appendChild(userName);
+            }
+            return avatar_with_name;
+        }
+  
+        const avatar_with_name = createAvatarWithName(); // add avatar + name
+        if (avatarDataInput.value) newFeedPost.appendChild(avatar_with_name);
+  
+        const feedText = document.createElement("p");
+        feedText.textContent = content;
+        feedText.style.fontSize = "25px";
+        newFeedPost.appendChild(feedText);
+
+        const isImageUploaded = uploadedImage.files.length > 0;
+        const isVideoUploaded = uploadedVideo.files.length > 0;
+
+        if(isImageUploaded && isVideoUploaded){
+            alert("Please upload either an image or a video, but not both.");
+            return;
+        }
+        else if(isImageUploaded){
+            appendUploadedFile(uploadedImage, "uploaded-image", newFeedPost);
+        }
+        else if(isVideoUploaded){
+            appendUploadedFile(uploadedVideo, "uploaded-video", newFeedPost);
+        }
+
+        function createButton(text, className, clickHandler) {
+            const button = document.createElement("button");
+            button.textContent = text;
+            button.classList.add(className);
+            if (clickHandler) button.addEventListener("click", clickHandler);
+            return button;
+        }
+
+        function createDeleteButton(post) {
+            return createButton("Delete", "delete-button", () => {
+                feedPost.removeChild(post);
+                // localStorage.setItem('post-content', feedPost.innerHTML);
+            });
+        }
+  
+        const deleteButton = createDeleteButton(newFeedPost);
+        newFeedPost.appendChild(deleteButton);
+  
+        return newFeedPost;
+      }
+  
+      function geoFindMe() {
+        mapLink.href = "";
+        mapLink.textContent = "Locating…";
+  
+        function success(position) {
+          const { latitude, longitude } = position.coords;
+          mapLink.href = `https://www.openstreetmap.org/#map=18/${latitude}/${longitude}`;
+          mapLink.textContent = `Latitude: ${latitude}°, Longitude: ${longitude}°`;
+          mapLink.style.color = "#808000";
+          mapLink.style.fontWeight = "bold";
+          mapLink.style.marginLeft = '10px';
+        }
+  
+        function error() {
+          mapLink.textContent = "Unable to retrieve your location";
+        }
+  
+        if (!navigator.geolocation) {
+          mapLink.textContent = "Geolocation is not supported by your browser";
+        } 
+        else {
+          status.textContent = "Locating…";
+          navigator.geolocation.getCurrentPosition(success, error);
+        }
+      }
+  
+      document.querySelector("#find-me").addEventListener("click", geoFindMe);
+      document.querySelector(".send-feed").addEventListener("click", function () {
+          submitFeed();
+      });
+
+
+      // Load and display posts from Local Storage
+      // const storedPosts = localStorage.getItem("userPosts");
+      // if (storedPosts) {
+      //   const parsedPosts = JSON.parse(storedPosts);
+      //   parsedPosts.forEach((postHTML) => {
+      //     const postElement = document.createElement("div");
+      //     postElement.innerHTML = postHTML;
+      //     feedPost.appendChild(postElement);
+      //   });
+      // }
+
+      get(ref(db, 'userPosts')).then((snapshot) => {
+          const storedPosts = snapshot.val() || {}; 
+          if (storedPosts.userPosts) {
+              storedPosts.userPosts.forEach((postHTML) => {
+                  const postElement = document.createElement("div");
+                  postElement.innerHTML = postHTML;
+                  feedPost.appendChild(postElement);
+              });
+          }          
+      });
+  });
+</script>
+
+
+
