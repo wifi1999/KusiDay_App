@@ -54,7 +54,7 @@ app.post('/new-post', checkAuthenticated, async(req, res) => {
     const client = await dbConnect();
 
     const postHTML = req.body.content;
-    // console.log(postHTML)
+    console.log(postHTML)
 
     const insertPosts = async(client, newPost) => {
         await client.db("user").collection("user_kusi_feed_post").insertOne(newPost);
@@ -71,7 +71,6 @@ app.post('/new-post', checkAuthenticated, async(req, res) => {
         }
 
         // console.log(userNewPost)
-   
         await insertPosts(client, userNewPost);
         
         await client.close();
@@ -82,6 +81,7 @@ app.post('/new-post', checkAuthenticated, async(req, res) => {
     catch(err){
         console.error('Error updating posts', err);
         res.status(500).json({ message: 'error updating new posts' });
+        return;
     }
 });
 

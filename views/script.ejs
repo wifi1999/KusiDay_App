@@ -72,6 +72,9 @@
           const newFeedPost = createFeedPost(feedContent);
           feedPost.insertBefore(newFeedPost, feedPost.firstChild);
           feedInput.value = "";
+
+          savePostToLocalStorage(newFeedPost.outerHTML);
+
         }
       }
   
@@ -129,9 +132,7 @@
             const button = document.createElement("button");
             button.textContent = text;
             button.classList.add(className);
-            if (clickHandler) {
-                button.addEventListener("click", clickHandler);
-            }
+            if (clickHandler) button.addEventListener("click", clickHandler);
             return button;
         }
 
@@ -178,6 +179,30 @@
           submitFeed();
       });
 
+
+      // Load and display posts from Local Storage
+      // const storedPosts = localStorage.getItem("userPosts");
+      // if (storedPosts) {
+      //   const parsedPosts = JSON.parse(storedPosts);
+      //   parsedPosts.forEach((postHTML) => {
+      //     const postElement = document.createElement("div");
+      //     postElement.innerHTML = postHTML;
+      //     feedPost.appendChild(postElement);
+      //   });
+      // }
+
+
+    //   get(ref(db, 'userPosts')).then((snapshot) => {
+    //       const storedPosts = snapshot.val() || {}; 
+    //       if (storedPosts.userPosts) {
+    //           storedPosts.userPosts.forEach((postHTML) => {
+    //               const postElement = document.createElement("div");
+    //               postElement.innerHTML = postHTML;
+    //               feedPost.appendChild(postElement);
+    //           });
+    //       }          
+    //   });
+
       async function fetchAndDisplayPosts(){
            try{
                 const response = await fetch('/getPosts')
@@ -186,13 +211,14 @@
                 }
                 const data = await response.json();
                 const posts = data.posts;
-                console.log(posts)
+            
 
                 posts.forEach((post) => {
                     const postElement = document.createElement('div')
                     postElement.innerHTML = post.userNewPost
                     feedPost.appendChild(postElement)
                 })
+
            }
            catch(err){
                 console.error('Error retrieving user posts', err)
