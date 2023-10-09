@@ -1,22 +1,5 @@
 <script type="module">
-
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
-    import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
-    const firebaseConfig = {
-        apiKey: "AIzaSyBjOkI2pFpVJM0LjBbfr8lmfINwoD4JfDs",
-        authDomain: "kusiday-934d3.firebaseapp.com",
-        databaseURL: "https://kusiday-934d3-default-rtdb.firebaseio.com",
-        projectId: "kusiday-934d3",
-        storageBucket: "kusiday-934d3.appspot.com",
-        messagingSenderId: "968980863926",
-        appId: "1:968980863926:web:c4ffe72bbfa97ad4a57f17"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    
     document.addEventListener("DOMContentLoaded", function() {
-      // localStorage.clear();
       const feedsButton = document.getElementById("feeds");
       const serverButton = document.getElementById("server");
       const requesterButton = document.getElementById("requester");
@@ -27,8 +10,6 @@
       const mapLink = document.querySelector("#map-link");
       const uploadedImage = document.querySelector("#image-upload");
       const uploadedVideo = document.querySelector("#video-upload");
-
-      console.log(avatarDataInput.value);
 
       function navigateToPage(page) {
           window.location.href = `./${page}`;
@@ -45,29 +26,44 @@
               previewElement.classList.add(className);
               previewElement.src = URL.createObjectURL(file);
               
-              if (file.type.startsWith("video/")) previewElement.setAttribute("controls", "true");
+              if (file.type.startsWith("video/")){
+                  previewElement.setAttribute("controls", "true");
+              } 
               parentElement.appendChild(previewElement);
               uploadedElement.value = "";
           }
       }
 
-      // new added...
-      function savePostToLocalStorage(postHTML){
-          // const storedPosts = JSON.parse(localStorage.getItem('userPosts')) || [];
-          // storedPosts.push(postHTML);
-          // localStorage.setItem("userPosts", JSON.stringify(storedPosts));
+      async function savePostToLocalStorage(postHTML){
+          try{
+            const htmlSizeInBytes = new Blob([postHTML]).size;
+            const htmlSizeInKB = htmlSizeInBytes / 1024; // KB
+            const htmlSizeInMB = htmlSizeInKB / 1024; // MB
 
-          get(ref(db, 'posts')).then((snapshot) => {
-              const userPostsData = snapshot.val() || {};
-              console.log(userPostsData);
-              const storedPosts = userPostsData.userPosts === undefined ? [] : JSON.parse(userPostsData.userPosts);
-              console.log(storedPosts);
-              storedPosts.push(postHTML);
-              console.log(storedPosts);
-              const data = { userPosts : JSON.stringify(storedPosts)};
-              console.log(data);
-              set(ref(db, 'posts'), data);
-          });
+            console.log(`HTML size: ${htmlSizeInBytes} bytes (${htmlSizeInKB} KB / ${htmlSizeInMB} MB)`);
+            
+            const response = await fetch('/new-post', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ content: postHTML })
+             })
+
+             if(response.status === 200){
+                const result = await response.json();
+                // alert(result.message)
+             }
+             else{
+                console.log('Response status', response.status)
+                console.log('Response text', await response.text())
+                alert("Error updating new posts")
+             }
+          }
+          catch(err){
+              console.error(err);
+              alert('Error updating new posts');
+          }     
       }
   
       function submitFeed() {
@@ -76,10 +72,6 @@
           const newFeedPost = createFeedPost(feedContent);
           feedPost.insertBefore(newFeedPost, feedPost.firstChild);
           feedInput.value = "";
-
-          // new added..
-          savePostToLocalStorage(newFeedPost.outerHTML);
-
         }
       }
   
@@ -137,14 +129,15 @@
             const button = document.createElement("button");
             button.textContent = text;
             button.classList.add(className);
-            if (clickHandler) button.addEventListener("click", clickHandler);
+            if (clickHandler) {
+                button.addEventListener("click", clickHandler);
+            }
             return button;
         }
 
         function createDeleteButton(post) {
             return createButton("Delete", "delete-button", () => {
                 feedPost.removeChild(post);
-                // localStorage.setItem('post-content', feedPost.innerHTML);
             });
         }
   
@@ -185,28 +178,29 @@
           submitFeed();
       });
 
+      async function fetchAndDisplayPosts(){
+           try{
+                const response = await fetch('/getPosts')
+                if(!response.ok){
+                    alert('Error retrieving user posts')
+                }
+                const data = await response.json();
+                const posts = data.posts;
+                console.log(posts)
 
-      // Load and display posts from Local Storage
-      // const storedPosts = localStorage.getItem("userPosts");
-      // if (storedPosts) {
-      //   const parsedPosts = JSON.parse(storedPosts);
-      //   parsedPosts.forEach((postHTML) => {
-      //     const postElement = document.createElement("div");
-      //     postElement.innerHTML = postHTML;
-      //     feedPost.appendChild(postElement);
-      //   });
-      // }
+                posts.forEach((post) => {
+                    const postElement = document.createElement('div')
+                    postElement.innerHTML = post.userNewPost
+                    feedPost.appendChild(postElement)
+                })
+           }
+           catch(err){
+                console.error('Error retrieving user posts', err)
+                alert('Error retrieving user posts')
+           }
+      }
+      fetchAndDisplayPosts()
 
-      get(ref(db, 'userPosts')).then((snapshot) => {
-          const storedPosts = snapshot.val() || {}; 
-          if (storedPosts.userPosts) {
-              storedPosts.userPosts.forEach((postHTML) => {
-                  const postElement = document.createElement("div");
-                  postElement.innerHTML = postHTML;
-                  feedPost.appendChild(postElement);
-              });
-          }          
-      });
   });
 </script>
 

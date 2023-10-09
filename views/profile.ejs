@@ -1,3 +1,6 @@
+<body>
+
+
 <h1>Personal Detail</h1>
   <div class="profile-section">
     <% if (!avatar) { %>
@@ -28,8 +31,11 @@
   </div>
 
   <div class="rectangular-box">
-      <input type="text" class="feeds-input">
-      <button class="submit">Submit</button>
+      <div class="sameline">
+        <input type="text" class="feeds-input">
+        <button class="submit" style="color: #f6b71a">Submit</button>
+      </div>
+     
 
       <input type="file" id="image-upload" accept="image/*">
       <input type="file" id="video-upload" accept="video/*">
@@ -40,7 +46,19 @@
 
   </div>
 
+</body>
+
 <style>
+
+  body{
+    background: #f6b71a;
+    /* background: #866b26; */
+  }
+
+  .sameline{
+    display: flex;
+  }
+
   .user-name{
       margin-left:15px;
   }
@@ -59,6 +77,10 @@
   .submit{
     height: 100px;
     width: 200px;
+    background-color: #866b26;
+    font: #f6b71a;
+    font-size: 25px;
+    text-shadow: -1px -1px 0 black, 1px -1px 0 black, -1px 1px 0 black, 1px 1px 0 black; /* Apply a black border using text-shadow */
   }
 
   .uploaded-image{
@@ -74,7 +96,7 @@
   .feeds-input{
     width: 900px;
     height: 100px;
-    margin-top: 30px;
+    margin-top: 0px;
     font-size: 30px;
   }
 
@@ -85,10 +107,11 @@
     padding: 20px; /* Adjust padding as needed */
     margin: 20px auto; /* Center the box horizontally */
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); /* Add a shadow effect */
-    background-color: white; /* Background color */
+    background-color: #f0e1ba; /* Background color */
     margin-top: 100px;
     max-height: none;
     overflow: auto;
+
   }
 
   .profile-section {

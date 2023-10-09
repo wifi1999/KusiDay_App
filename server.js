@@ -22,6 +22,7 @@ const kusiClient = require('./Route/kusiClient');
 const dbConnect = require('./dbConnection.js');
 const multer = require('multer');
 const upload = multer();
+const bodyParser = require('body-parser');
 
 initializePassport(passport, getUserByEmail, getUserById); // passportConfiguration
 
@@ -33,6 +34,11 @@ app.use(session({ secret: process.env.SESSION_SECRET,resave: false, saveUninitia
 app.use(passport.initialize()); // Initialize Passport.js to manage authentication
 app.use(passport.session()); // Initialize Passport.js session handling
 app.use(methodOverride('_method')); // Middleware to override HTTP methods based on the '_method' parameter in the query string.
+app.use(express.text());
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.get('/register', checkNotAuthenticated, registerGet);
 app.post('/register', checkNotAuthenticated, registerPost);
@@ -43,6 +49,62 @@ app.post('/profile', upload.single('avatar'), profilePost);
 app.get('/', checkAuthenticated, homeGet);
 app.get('/kusi-server', checkAuthenticated, kusiClient);
 app.get('/kusi-client', checkAuthenticated, kusiServer);
+
+app.post('/new-post', checkAuthenticated, async(req, res) => {
+    const client = await dbConnect();
+
+    const postHTML = req.body.content;
+    // console.log(postHTML)
+
+    const insertPosts = async(client, newPost) => {
+        await client.db("user").collection("user_kusi_feed_post").insertOne(newPost);
+    }
+    
+    try{
+        const userNewPost = {
+            userNewPost : postHTML,
+            userId: (await req.user).id, 
+            name: (await req.user).name,
+            phone: (await req.user).phone,
+            email: (await req.user).email,
+            address: (await req.user).address
+        }
+
+        // console.log(userNewPost)
+   
+        await insertPosts(client, userNewPost);
+        
+        await client.close();
+        console.log('new user posts uploaded to MongoDB successfully');
+
+        res.status(200).json({ message: 'new posts updated successfully' });
+    }
+    catch(err){
+        console.error('Error updating posts', err);
+        res.status(500).json({ message: 'error updating new posts' });
+    }
+});
+
+app.get('/getPosts', checkAuthenticated, async(req, res) => {
+    const client = await dbConnect()
+    const getAllPosts = async(client) => {
+        return await client.db("user").collection("user_kusi_feed_post").find({}).toArray()
+    }
+
+    try{
+        const posts = await getAllPosts(client)
+        // console.log(posts)
+        await client.close()
+        console.log("all user posts retrieved successfully")
+        res.status(200).json({ posts: posts })
+    }
+    catch(err){
+        console.error('Error retrieving posts', err)
+        res.status(500).json({error: 'Error retrieving posts'})
+    }
+})
+
+
 app.delete('/logout', logout);
 
 app.listen(3000, () => console.log('Server listen on port 3000')); 
