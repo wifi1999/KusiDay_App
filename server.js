@@ -56,6 +56,9 @@ app.post('/new-post', checkAuthenticated, async(req, res) => {
     const postHTML = req.body.content;
     console.log(postHTML)
 
+    const randID = req.body.randID;
+    console.log(randID);
+
     const insertPosts = async(client, newPost) => {
         await client.db("user").collection("user_kusi_feed_post").insertOne(newPost);
     }
@@ -64,6 +67,7 @@ app.post('/new-post', checkAuthenticated, async(req, res) => {
         const userNewPost = {
             userNewPost : postHTML,
             userId: (await req.user).id, 
+            randID: randID,
             name: (await req.user).name,
             phone: (await req.user).phone,
             email: (await req.user).email,
@@ -89,7 +93,7 @@ app.get('/getPosts', checkAuthenticated, async(req, res) => {
     const client = await dbConnect()
     const getAllPosts = async(client) => {
         return await client.db("user").collection("user_kusi_feed_post").find({}).toArray()
-    }
+    };
 
     try{
         const posts = await getAllPosts(client)
@@ -102,7 +106,34 @@ app.get('/getPosts', checkAuthenticated, async(req, res) => {
         console.error('Error retrieving posts', err)
         res.status(500).json({error: 'Error retrieving posts'})
     }
-})
+});
+
+app.delete('/delete-post', checkAuthenticated, async(req, res) => {
+    const client = await dbConnect();
+    const deleteID = req.body.deleteID;
+    console.log(deleteID);
+
+    const removePost = async (client, deleteID) => {
+        try{
+            const deletePost = await client.db("user").collection("user_kusi_feed_post").deleteOne({ randID: deleteID });
+            if(deletePost.deletedCount === 1){
+                res.status(200).json({ message: 'Post deleted successfully' });
+            }
+            else{
+                res.status(404).json({ message: 'Post not found' });
+            }
+        }
+        catch(err){
+            console.error('Error deleting post', err);
+            res.status(500).json('Server error');
+        }
+        finally{
+            await client.close();
+        }
+    };
+
+    await removePost(client, deleteID);
+});
 
 
 app.delete('/logout', logout);

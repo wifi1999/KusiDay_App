@@ -34,7 +34,7 @@
           }
       }
 
-      async function savePostToLocalStorage(postHTML){
+      async function savePostToLocalStorage(postHTML, randID){
           try{
             const htmlSizeInBytes = new Blob([postHTML]).size;
             const htmlSizeInKB = htmlSizeInBytes / 1024; // KB
@@ -47,7 +47,7 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ content: postHTML })
+                body: JSON.stringify({ content: postHTML, randID: randID })
              })
 
              if(response.status === 200){
@@ -68,17 +68,23 @@
   
       function submitFeed() {
         const feedContent = feedInput.value.trim();
+        // new add...
+        const randID = Math.random();
+
         if (feedContent !== "") {
-          const newFeedPost = createFeedPost(feedContent);
+          // new edited...
+          const newFeedPost = createFeedPost(feedContent, randID);
+
           feedPost.insertBefore(newFeedPost, feedPost.firstChild);
           feedInput.value = "";
 
-          savePostToLocalStorage(newFeedPost.outerHTML);
+          // new edited...
+          savePostToLocalStorage(newFeedPost.outerHTML, randID);
 
         }
       }
   
-      function createFeedPost(content) {
+      function createFeedPost(content, randID) {
         const newFeedPost = document.createElement("div");
         newFeedPost.classList.add("feed-post-item");
         newFeedPost.style.backgroundColor = "#FFF5E1";
@@ -132,17 +138,45 @@
             const button = document.createElement("button");
             button.textContent = text;
             button.classList.add(className);
-            if (clickHandler) button.addEventListener("click", clickHandler);
+            if (clickHandler) {
+               button.addEventListener("click", clickHandler);
+            }
             return button;
         }
 
-        function createDeleteButton(post) {
-            return createButton("Delete", "delete-button", () => {
-                feedPost.removeChild(post);
+        function createDeleteButton(post, deleteID) {
+            return createButton("Delete", "delete-button", async () => {
+                // feedPost.removeChild(post);
+                 
+                try{
+                   const response = await fetch('delete-post', {
+                      method: 'DELETE',
+                      headers: {
+                         'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({ deleteID })
+                   });
+
+                   if(response.status === 200){
+                      feedPost.removeChild(post);
+                      alert('Post deleted successfully');
+                   }
+                   else{
+                      alert('Error deleting post')
+                   }
+                }
+                catch(err){
+                   console.error('Error deleting post', err);
+                   alert('Error deleting post')
+                }
             });
         }
   
-        const deleteButton = createDeleteButton(newFeedPost);
+        // new add...
+        const deleteID = randID;
+
+        // modified...
+        const deleteButton = createDeleteButton(newFeedPost, deleteID);
         newFeedPost.appendChild(deleteButton);
   
         return newFeedPost;
@@ -179,30 +213,6 @@
           submitFeed();
       });
 
-
-      // Load and display posts from Local Storage
-      // const storedPosts = localStorage.getItem("userPosts");
-      // if (storedPosts) {
-      //   const parsedPosts = JSON.parse(storedPosts);
-      //   parsedPosts.forEach((postHTML) => {
-      //     const postElement = document.createElement("div");
-      //     postElement.innerHTML = postHTML;
-      //     feedPost.appendChild(postElement);
-      //   });
-      // }
-
-
-    //   get(ref(db, 'userPosts')).then((snapshot) => {
-    //       const storedPosts = snapshot.val() || {}; 
-    //       if (storedPosts.userPosts) {
-    //           storedPosts.userPosts.forEach((postHTML) => {
-    //               const postElement = document.createElement("div");
-    //               postElement.innerHTML = postHTML;
-    //               feedPost.appendChild(postElement);
-    //           });
-    //       }          
-    //   });
-
       async function fetchAndDisplayPosts(){
            try{
                 const response = await fetch('/getPosts')
@@ -211,13 +221,13 @@
                 }
                 const data = await response.json();
                 const posts = data.posts;
-            
 
-                posts.forEach((post) => {
-                    const postElement = document.createElement('div')
-                    postElement.innerHTML = post.userNewPost
-                    feedPost.appendChild(postElement)
-                })
+                for (let i = posts.length - 1; i >= 0; i--) {
+                    const post = posts[i];
+                    const postElement = document.createElement('div');
+                    postElement.innerHTML = post.userNewPost;
+                    feedPost.appendChild(postElement);
+                }
 
            }
            catch(err){
