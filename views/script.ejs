@@ -44,9 +44,7 @@
             
             const response = await fetch('/new-post', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ content: postHTML, randID: randID })
              })
 
@@ -67,145 +65,145 @@
       }
   
       function submitFeed() {
-        const feedContent = feedInput.value.trim();
-        // new add...
-        const randID = Math.random();
+          const feedContent = feedInput.value.trim();
+          // new add...
+          const randID = Math.random();
 
-        if (feedContent !== "") {
-          // new edited...
-          const newFeedPost = createFeedPost(feedContent, randID);
+          if (feedContent !== "") {
+            // new edited...
+            const newFeedPost = createFeedPost(feedContent, randID);
+            feedPost.insertBefore(newFeedPost, feedPost.firstChild);
+            feedInput.value = "";
 
-          feedPost.insertBefore(newFeedPost, feedPost.firstChild);
-          feedInput.value = "";
-
-          // new edited...
-          savePostToLocalStorage(newFeedPost.outerHTML, randID);
-
-        }
+            // new edited... 
+            savePostToLocalStorage(newFeedPost.outerHTML, randID);
+          }
       }
   
       function createFeedPost(content, randID) {
-        const newFeedPost = document.createElement("div");
-        newFeedPost.classList.add("feed-post-item");
-        newFeedPost.style.backgroundColor = "#FFF5E1";
+          const newFeedPost = document.createElement("div");
+          newFeedPost.classList.add("feed-post-item");
+          newFeedPost.style.backgroundColor = "#FFF5E1";
 
-        function createAvatarWithName() {
-            const avatar_with_name = document.createElement("div");
-            avatar_with_name.classList.add("avatar_with_name");
+          function createAvatarWithName() {
+              const avatar_with_name = document.createElement("div");
+              avatar_with_name.classList.add("avatar_with_name");
+      
+              if ("<%= avatar %>") {
+                  const userName = document.createElement("p");
+                  userName.classList.add("user-name");
+                  userName.textContent = "<%= typeof avatar !== 'undefined' && avatar !== null ? avatar.name : '' %>";
+                  userName.style.fontWeight = "bold";
+
+                  function createAvatarImage() {
+                      const newAvatarImage = new Image();
+                      newAvatarImage.classList.add("small-avatar");
+                      newAvatarImage.src = "data:image/jpeg;base64," + avatarDataInput.value;
+                      return newAvatarImage;
+                  }
+
+                  avatar_with_name.appendChild(createAvatarImage());
+                  avatar_with_name.appendChild(userName);
+              }
+              return avatar_with_name;
+          }
+  
+          const avatar_with_name = createAvatarWithName(); // add avatar + name
+          if (avatarDataInput.value) {
+              newFeedPost.appendChild(avatar_with_name);
+          }
     
-            if ("<%= avatar %>") {
-                const userName = document.createElement("p");
-                userName.classList.add("user-name");
-                userName.textContent = "<%= typeof avatar !== 'undefined' && avatar !== null ? avatar.name : '' %>";
-                userName.style.fontWeight = "bold";
+          const feedText = document.createElement("p");
+          feedText.textContent = content;
+          feedText.style.fontSize = "25px";
+          newFeedPost.appendChild(feedText);
 
-                function createAvatarImage() {
-                    const newAvatarImage = new Image();
-                    newAvatarImage.classList.add("small-avatar");
-                    newAvatarImage.src = "data:image/jpeg;base64," + avatarDataInput.value;
-                    return newAvatarImage;
-                }
+          const isImageUploaded = uploadedImage.files.length > 0;
+          const isVideoUploaded = uploadedVideo.files.length > 0;
 
-                avatar_with_name.appendChild(createAvatarImage());
-                avatar_with_name.appendChild(userName);
-            }
-            return avatar_with_name;
-        }
-  
-        const avatar_with_name = createAvatarWithName(); // add avatar + name
-        if (avatarDataInput.value) newFeedPost.appendChild(avatar_with_name);
-  
-        const feedText = document.createElement("p");
-        feedText.textContent = content;
-        feedText.style.fontSize = "25px";
-        newFeedPost.appendChild(feedText);
+          if(isImageUploaded && isVideoUploaded){
+              alert("Please upload either an image or a video, but not both.");
+              return;
+          }
+          else if(isImageUploaded){
+              appendUploadedFile(uploadedImage, "uploaded-image", newFeedPost);
+          }
+          else if(isVideoUploaded){
+              appendUploadedFile(uploadedVideo, "uploaded-video", newFeedPost);
+          }
 
-        const isImageUploaded = uploadedImage.files.length > 0;
-        const isVideoUploaded = uploadedVideo.files.length > 0;
+          function createButton(text, className, deleteIDStr, clickHandler) {
+              const button = document.createElement("button");
+              button.textContent = text;
+              button.classList.add(className);
+              button.setAttribute("id", deleteIDStr);
+              if (clickHandler) {
+                button.addEventListener("click", clickHandler);
+              }
+              return button;
+          }
 
-        if(isImageUploaded && isVideoUploaded){
-            alert("Please upload either an image or a video, but not both.");
-            return;
-        }
-        else if(isImageUploaded){
-            appendUploadedFile(uploadedImage, "uploaded-image", newFeedPost);
-        }
-        else if(isVideoUploaded){
-            appendUploadedFile(uploadedVideo, "uploaded-video", newFeedPost);
-        }
+          function createDeleteButton(post, deleteID) {
+              const deleteIDStr = deleteID.toString();
+              return createButton("Delete", "delete-button", deleteIDStr, async () => {
+                  try{
+                    const response = await fetch('delete-post', {
+                        method: 'DELETE',
+                        headers: {
+                          'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ deleteID })
+                    });
 
-        function createButton(text, className, clickHandler) {
-            const button = document.createElement("button");
-            button.textContent = text;
-            button.classList.add(className);
-            if (clickHandler) {
-               button.addEventListener("click", clickHandler);
-            }
-            return button;
-        }
+                    if(response.status === 200){
+                        feedPost.removeChild(post);
+                        // alert('Post deleted successfully');
+                    }
+                    else{
+                        alert('Error deleting post')
+                    }
+                  }
+                  catch(err){
+                    console.error('Error deleting post', err);
+                    alert('Error deleting post')
+                  }
+              });
+          }
+    
+          // new add...
+          const deleteID = randID;
 
-        function createDeleteButton(post, deleteID) {
-            return createButton("Delete", "delete-button", async () => {
-                // feedPost.removeChild(post);
-                 
-                try{
-                   const response = await fetch('delete-post', {
-                      method: 'DELETE',
-                      headers: {
-                         'Content-Type': 'application/json'
-                      },
-                      body: JSON.stringify({ deleteID })
-                   });
-
-                   if(response.status === 200){
-                      feedPost.removeChild(post);
-                      alert('Post deleted successfully');
-                   }
-                   else{
-                      alert('Error deleting post')
-                   }
-                }
-                catch(err){
-                   console.error('Error deleting post', err);
-                   alert('Error deleting post')
-                }
-            });
-        }
-  
-        // new add...
-        const deleteID = randID;
-
-        // modified...
-        const deleteButton = createDeleteButton(newFeedPost, deleteID);
-        newFeedPost.appendChild(deleteButton);
-  
-        return newFeedPost;
+          // modified...
+          const deleteButton = createDeleteButton(newFeedPost, deleteID);
+          newFeedPost.appendChild(deleteButton);
+    
+          return newFeedPost;
       }
   
       function geoFindMe() {
-        mapLink.href = "";
-        mapLink.textContent = "Locating…";
-  
-        function success(position) {
-          const { latitude, longitude } = position.coords;
-          mapLink.href = `https://www.openstreetmap.org/#map=18/${latitude}/${longitude}`;
-          mapLink.textContent = `Latitude: ${latitude}°, Longitude: ${longitude}°`;
-          mapLink.style.color = "#808000";
-          mapLink.style.fontWeight = "bold";
-          mapLink.style.marginLeft = '10px';
-        }
-  
-        function error() {
-          mapLink.textContent = "Unable to retrieve your location";
-        }
-  
-        if (!navigator.geolocation) {
-          mapLink.textContent = "Geolocation is not supported by your browser";
-        } 
-        else {
-          status.textContent = "Locating…";
-          navigator.geolocation.getCurrentPosition(success, error);
-        }
+          mapLink.href = "";
+          mapLink.textContent = "Locating…";
+    
+          function success(position) {
+              const { latitude, longitude } = position.coords;
+              mapLink.href = `https://www.openstreetmap.org/#map=18/${latitude}/${longitude}`;
+              mapLink.textContent = `Latitude: ${latitude}°, Longitude: ${longitude}°`;
+              mapLink.style.color = "#808000";
+              mapLink.style.fontWeight = "bold";
+              mapLink.style.marginLeft = '10px';
+          }
+    
+          function error() {
+              mapLink.textContent = "Unable to retrieve your location";
+          }
+    
+          if (!navigator.geolocation) {
+              mapLink.textContent = "Geolocation is not supported by your browser";
+          } 
+          else {
+              status.textContent = "Locating…";
+              navigator.geolocation.getCurrentPosition(success, error);
+          }
       }
   
       document.querySelector("#find-me").addEventListener("click", geoFindMe);
@@ -218,6 +216,7 @@
                 const response = await fetch('/getPosts')
                 if(!response.ok){
                     alert('Error retrieving user posts')
+                    return
                 }
                 const data = await response.json();
                 const posts = data.posts;
@@ -229,6 +228,34 @@
                     feedPost.appendChild(postElement);
                 }
 
+                // new add...
+                const deleteButton = document.querySelectorAll('.delete-button');
+                deleteButton.forEach((button) => {
+                    button.addEventListener('click', async () => {
+                       const deleteID = parseFloat(button.id);
+                       // new add...
+                       try{
+                          const response = await fetch('delete-post', {
+                              method: "DELETE",
+                              headers: { 'Content-Type': 'application/json' }, 
+                              body: JSON.stringify({ deleteID })
+                          });
+
+                          if(response.status === 200){
+                              // feedPost.innerHTML = '';
+                              location.reload(); // refresh the browser page
+                              // alert('Post delete successfully');
+                          }
+                          else{
+                              alert('Error deleting posts');
+                          }
+                       }
+                       catch(err){
+                          console.error('Error deleting posts', err);
+                          alert('Error deleting posts');
+                       }
+                    });
+                });
            }
            catch(err){
                 console.error('Error retrieving user posts', err)
@@ -236,7 +263,6 @@
            }
       }
       fetchAndDisplayPosts()
-
   });
 </script>
 

@@ -54,10 +54,10 @@ app.post('/new-post', checkAuthenticated, async(req, res) => {
     const client = await dbConnect();
 
     const postHTML = req.body.content;
-    console.log(postHTML)
+    // console.log(postHTML)
 
     const randID = req.body.randID;
-    console.log(randID);
+    // console.log(randID);
 
     const insertPosts = async(client, newPost) => {
         await client.db("user").collection("user_kusi_feed_post").insertOne(newPost);
@@ -115,6 +115,10 @@ app.delete('/delete-post', checkAuthenticated, async(req, res) => {
 
     const removePost = async (client, deleteID) => {
         try{
+
+            console.log(deleteID);
+            console.log(typeof deleteID);
+            
             const deletePost = await client.db("user").collection("user_kusi_feed_post").deleteOne({ randID: deleteID });
             if(deletePost.deletedCount === 1){
                 res.status(200).json({ message: 'Post deleted successfully' });
