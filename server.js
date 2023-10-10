@@ -18,7 +18,9 @@ const profilePost = require('./Route/profilePost.js');
 const profileGet = require('./Route/profileGet.js');
 const kusiServer = require('./Route/kusiServer');
 const kusiClient = require('./Route/kusiClient');
-
+const postPost = require('./Route/postPost');
+const getPost = require('./Route/getPost');
+const deletePost = require('./Route/deletePost');
 const dbConnect = require('./dbConnection.js');
 const multer = require('multer');
 const upload = multer();
@@ -27,7 +29,6 @@ const bodyParser = require('body-parser');
 initializePassport(passport, getUserByEmail, getUserById); // passportConfiguration
 
 app.set('view-engine', 'ejs'); // setting view-engine for Express to 'ejs', which is use dto render HTML page
-
 app.use(express.urlencoded({ extended: false })); // Allows the application to access form data submitted in POST requests via req.body.
 app.use(flash()); // Using flash middleware for displaying flash messages.
 app.use(session({ secret: process.env.SESSION_SECRET,resave: false, saveUninitialized: false }));
@@ -49,99 +50,10 @@ app.post('/profile', upload.single('avatar'), profilePost);
 app.get('/', checkAuthenticated, homeGet);
 app.get('/kusi-server', checkAuthenticated, kusiClient);
 app.get('/kusi-client', checkAuthenticated, kusiServer);
-
-app.post('/new-post', checkAuthenticated, async(req, res) => {
-    const client = await dbConnect();
-
-    const postHTML = req.body.content;
-    // console.log(postHTML)
-
-    const randID = req.body.randID;
-    // console.log(randID);
-
-    const insertPosts = async(client, newPost) => {
-        await client.db("user").collection("user_kusi_feed_post").insertOne(newPost);
-    }
-    
-    try{
-        const userNewPost = {
-            userNewPost : postHTML,
-            userId: (await req.user).id, 
-            randID: randID,
-            name: (await req.user).name,
-            phone: (await req.user).phone,
-            email: (await req.user).email,
-            address: (await req.user).address
-        }
-
-        // console.log(userNewPost)
-        await insertPosts(client, userNewPost);
-        
-        await client.close();
-        console.log('new user posts uploaded to MongoDB successfully');
-
-        res.status(200).json({ message: 'new posts updated successfully' });
-    }
-    catch(err){
-        console.error('Error updating posts', err);
-        res.status(500).json({ message: 'error updating new posts' });
-        return;
-    }
-});
-
-app.get('/getPosts', checkAuthenticated, async(req, res) => {
-    const client = await dbConnect()
-    const getAllPosts = async(client) => {
-        return await client.db("user").collection("user_kusi_feed_post").find({}).toArray()
-    };
-
-    try{
-        const posts = await getAllPosts(client)
-        // console.log(posts)
-        await client.close()
-        console.log("all user posts retrieved successfully")
-        res.status(200).json({ posts: posts })
-    }
-    catch(err){
-        console.error('Error retrieving posts', err)
-        res.status(500).json({error: 'Error retrieving posts'})
-    }
-});
-
-app.delete('/delete-post', checkAuthenticated, async(req, res) => {
-    const client = await dbConnect();
-    const deleteID = req.body.deleteID;
-    console.log(deleteID);
-
-    const removePost = async (client, deleteID) => {
-        try{
-
-            console.log(deleteID);
-            console.log(typeof deleteID);
-            
-            const deletePost = await client.db("user").collection("user_kusi_feed_post").deleteOne({ randID: deleteID });
-            if(deletePost.deletedCount === 1){
-                res.status(200).json({ message: 'Post deleted successfully' });
-            }
-            else{
-                res.status(404).json({ message: 'Post not found' });
-            }
-        }
-        catch(err){
-            console.error('Error deleting post', err);
-            res.status(500).json('Server error');
-        }
-        finally{
-            await client.close();
-        }
-    };
-
-    await removePost(client, deleteID);
-});
-
-
+app.post('/new-post', checkAuthenticated, postPost);
+app.get('/getPosts', checkAuthenticated, getPost);
+app.delete('/delete-post', checkAuthenticated, deletePost);
 app.delete('/logout', logout);
-
 app.listen(3000, () => console.log('Server listen on port 3000')); 
 
 
