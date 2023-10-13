@@ -25,13 +25,13 @@ const dbConnect = require('./dbConnection.js');
 
 const multer = require('multer');
 
-const storage = multer.memoryStorage()
-const upload = multer({ 
-    storage: storage,
-    limit: {fileSize: 1000 * 1024 * 1024}
-})
+// const storage = multer.memoryStorage()
+// const upload = multer({ 
+//     storage: storage,
+//     limit: {fileSize: 1000 * 1024 * 1024}
+// })
 
-// const upload = multer();
+const upload = multer();
 // new add..
 const progressBar = require('progress')
 const bodyParser = require('body-parser');
