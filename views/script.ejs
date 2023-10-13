@@ -36,12 +36,6 @@
 
       async function savePostToLocalStorage(postHTML, randID){
           try{
-            const htmlSizeInBytes = new Blob([postHTML]).size;
-            const htmlSizeInKB = htmlSizeInBytes / 1024; // KB
-            const htmlSizeInMB = htmlSizeInKB / 1024; // MB
-
-            console.log(`HTML size: ${htmlSizeInBytes} bytes (${htmlSizeInKB} KB / ${htmlSizeInMB} MB)`);
-            
             const response = await fetch('/new-post', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -99,7 +93,14 @@
                       const newAvatarImage = new Image();
                       newAvatarImage.classList.add("small-avatar");
                       newAvatarImage.src = "data:image/jpeg;base64," + avatarDataInput.value;
-                      return newAvatarImage;
+                      // new added....
+                      const avatarButton = document.createElement("button")
+                      avatarButton.style.border = "none"
+                      avatarButton.style.background = "none"
+                      avatarButton.appendChild(newAvatarImage)
+                      console.log(avatarButton)
+                      return avatarButton
+                      // return newAvatarImage;
                   }
 
                   avatar_with_name.appendChild(createAvatarImage());
