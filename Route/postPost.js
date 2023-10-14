@@ -4,7 +4,8 @@ const postPost = async(req, res) => {
     const client = await dbConnect();
 
     const postHTML = req.body.content;
-    // console.log(postHTML)
+    
+    console.log(postHTML)
 
     const randID = req.body.randID;
     // console.log(randID);

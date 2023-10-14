@@ -35,7 +35,7 @@
                 //   console.log(base64Data)
                 //   previewElement.src = base64Data;
                   previewElement.src = base64Data
-                  await submitFeed()
+                //   await submitFeed()
                 //   console.log(previewElement)
                              
                 //   parentElement.appendChild(previewElement);
@@ -56,8 +56,6 @@
               uploadedElement.value = "";   
 
               reader.readAsDataURL(file);
-
-            
 
             //   if (file.type.startsWith("video/")){
             //      previewElement.setAttribute("controls", "true");
@@ -113,7 +111,8 @@
 
           if (feedContent !== "") {
             // new edited...
-            const newFeedPost = await createFeedPost(feedContent, randID); // 1
+            // const newFeedPost = await createFeedPost(feedContent, randID); // 1
+            const { newFeedPost, isImageUploaded, isVideoUploaded } = await createFeedPost(feedContent, randID);
 
             // console.log(newFeedPost)
             feedPost.insertBefore(newFeedPost, feedPost.firstChild);
@@ -128,28 +127,55 @@
             // savePostToLocalStorage(newFeedPost.outerHTML, randID);
 
             // Wait for images to load before logging
-        const imagePromises = Array.from(newFeedPost.querySelectorAll("img")).map((img) =>
-            new Promise((resolve) => {
-                img.addEventListener("load", () => {
-                    resolve(img.src);
-                });
-            })
-        );
 
-        Promise.all(imagePromises)
-            .then((srcs) => {
-                console.log(newFeedPost);
-                console.log(newFeedPost.outerHTML);
-                // Log the src content after all images have loaded
-                console.log(srcs);
-                savePostToLocalStorage(newFeedPost.outerHTML, randID);
-            })
-            .catch((error) => {
-                console.error("Error waiting for images to load:", error);
-            });
-          }
+            if(isImageUploaded){
+                const imagePromises = Array.from(newFeedPost.querySelectorAll("img")).map((img) =>
+                new Promise((resolve) => {
+                    img.addEventListener("load", () => {
+                        resolve(img.src);
+                    });
+                    })
+                );
+
+                Promise.all(imagePromises)
+                    .then((srcs) => {
+                        // console.log(newFeedPost);
+                        // console.log(newFeedPost.outerHTML);
+                        // Log the src content after all images have loaded
+                        // console.log(srcs);
+                        savePostToLocalStorage(newFeedPost.outerHTML, randID);
+                    })
+                    .catch((error) => {
+                        console.error("Error waiting for images to load:", error);
+                    });
+                }
+            
+            else if(isVideoUploaded){
+                const videoPromises = Array.from(newFeedPost.querySelectorAll("video")).map((video) =>
+                new Promise((resolve) => {
+                    video.addEventListener("loadeddata", () => {
+                        resolve(video.src);
+                    });
+                })
+                );
+
+                Promise.all(videoPromises)
+                    .then((srcs) => {
+                        console.log(newFeedPost);
+                        console.log(newFeedPost.outerHTML);
+                        // Log the src content after all images have loaded
+                        console.log(srcs);
+                        savePostToLocalStorage(newFeedPost.outerHTML, randID);
+                    })
+                    .catch((error) => {
+                        console.error("Error waiting for images to load:", error);
+                    });
+            }
+            }   
+            
       }
-  
+          
+      
       async function createFeedPost(content, randID) {
           const newFeedPost = document.createElement("div");
           newFeedPost.classList.add("feed-post-item");
@@ -257,7 +283,14 @@
           // debug
         //   console.log(newFeedPost)
     
-          return newFeedPost;
+        //   return newFeedPost;
+
+          return {
+            newFeedPost: newFeedPost, 
+            isImageUploaded: isImageUploaded,
+            isVideoUploaded: isVideoUploaded
+          }
+
       }
   
       function geoFindMe() {
