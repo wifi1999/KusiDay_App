@@ -8,6 +8,8 @@ const getPost = async(req, res) => {
 
     try{
         const posts = await getAllPosts(client)
+
+        console.log(posts)
         await client.close()
         console.log("all user posts retrieved successfully")
         res.status(200).json({ posts: posts })

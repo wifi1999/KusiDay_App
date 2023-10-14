@@ -19,26 +19,74 @@
       serverButton.addEventListener("click", () => navigateToPage("kusi-server"));
       requesterButton.addEventListener("click", () => navigateToPage("kusi-client"));
 
-      function appendUploadedFile(uploadedElement, className, parentElement) {
+
+      async function appendUploadedFile(uploadedElement, className, parentElement) {
           if (uploadedElement.files.length > 0) {
               const file = uploadedElement.files[0];
               const previewElement = document.createElement(file.type.startsWith("image/") ? "img" : "video");
               previewElement.classList.add(className);
-              previewElement.src = URL.createObjectURL(file);
-              
+
+              // Create a FileReader to read the image file
+              const reader = new FileReader();
+
+              // Define an event handler when the reading is done
+              reader.onload = async function() {
+                  const base64Data = await reader.result;
+                //   console.log(base64Data)
+                //   previewElement.src = base64Data;
+                  previewElement.src = base64Data
+                  await submitFeed()
+                //   console.log(previewElement)
+                             
+                //   parentElement.appendChild(previewElement);
+
+                //   console.log(parentElement)
+
+                //   uploadedElement.value = "";   
+              };
+
               if (file.type.startsWith("video/")){
                   previewElement.setAttribute("controls", "true");
-              } 
+              }
+
               parentElement.appendChild(previewElement);
-              uploadedElement.value = "";
-          }
-      }
+
+            //   console.log(parentElement)
+
+              uploadedElement.value = "";   
+
+              reader.readAsDataURL(file);
+
+            
+
+            //   if (file.type.startsWith("video/")){
+            //      previewElement.setAttribute("controls", "true");
+            //   } 
+
+            //   parentElement.appendChild(previewElement);
+            //   uploadedElement.value = "";   
+          };
+
+              // console.log(previewElement)
+
+              // Read the image file as a data URL (base64 encoding)
+            //   reader.readAsDataURL(file);
+
+              // previewElement.src = URL.createObjectURL(file);
+              
+            //   if (file.type.startsWith("video/")){
+            //       previewElement.setAttribute("controls", "true");
+            //   } 
+            //   parentElement.appendChild(previewElement);
+            //   uploadedElement.value = "";
+        }
 
       async function savePostToLocalStorage(postHTML, randID){
+        // console.log(postHTML)
           try{
             const response = await fetch('/new-post', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json' },      
                 body: JSON.stringify({ content: postHTML, randID: randID })
              })
 
@@ -58,23 +106,51 @@
           }     
       }
   
-      function submitFeed() {
+      async function submitFeed() {
           const feedContent = feedInput.value.trim();
           // new add...
           const randID = Math.random();
 
           if (feedContent !== "") {
             // new edited...
-            const newFeedPost = createFeedPost(feedContent, randID);
+            const newFeedPost = await createFeedPost(feedContent, randID); // 1
+
+            // console.log(newFeedPost)
             feedPost.insertBefore(newFeedPost, feedPost.firstChild);
             feedInput.value = "";
 
             // new edited... 
-            savePostToLocalStorage(newFeedPost.outerHTML, randID);
+
+            // debug
+            // console.log(newFeedPost)
+            // console.log(newFeedPost.outerHTML)
+
+            // savePostToLocalStorage(newFeedPost.outerHTML, randID);
+
+            // Wait for images to load before logging
+        const imagePromises = Array.from(newFeedPost.querySelectorAll("img")).map((img) =>
+            new Promise((resolve) => {
+                img.addEventListener("load", () => {
+                    resolve(img.src);
+                });
+            })
+        );
+
+        Promise.all(imagePromises)
+            .then((srcs) => {
+                console.log(newFeedPost);
+                console.log(newFeedPost.outerHTML);
+                // Log the src content after all images have loaded
+                console.log(srcs);
+                savePostToLocalStorage(newFeedPost.outerHTML, randID);
+            })
+            .catch((error) => {
+                console.error("Error waiting for images to load:", error);
+            });
           }
       }
   
-      function createFeedPost(content, randID) {
+      async function createFeedPost(content, randID) {
           const newFeedPost = document.createElement("div");
           newFeedPost.classList.add("feed-post-item");
           newFeedPost.style.backgroundColor = "#FFF5E1";
@@ -98,7 +174,7 @@
                       avatarButton.style.border = "none"
                       avatarButton.style.background = "none"
                       avatarButton.appendChild(newAvatarImage)
-                      console.log(avatarButton)
+                    //   console.log(avatarButton)
                       return avatarButton
                       // return newAvatarImage;
                   }
@@ -127,10 +203,10 @@
               return;
           }
           else if(isImageUploaded){
-              appendUploadedFile(uploadedImage, "uploaded-image", newFeedPost);
+              await appendUploadedFile(uploadedImage, "uploaded-image", newFeedPost); // 2
           }
           else if(isVideoUploaded){
-              appendUploadedFile(uploadedVideo, "uploaded-video", newFeedPost);
+              await appendUploadedFile(uploadedVideo, "uploaded-video", newFeedPost);
           }
 
           function createButton(text, className, deleteIDStr, clickHandler) {
@@ -177,6 +253,9 @@
           // modified...
           const deleteButton = createDeleteButton(newFeedPost, deleteID);
           newFeedPost.appendChild(deleteButton);
+
+          // debug
+        //   console.log(newFeedPost)
     
           return newFeedPost;
       }
@@ -208,8 +287,8 @@
       }
   
       document.querySelector("#find-me").addEventListener("click", geoFindMe);
-      document.querySelector(".send-feed").addEventListener("click", function () {
-          submitFeed();
+      document.querySelector(".send-feed").addEventListener("click", async function () {
+          await submitFeed();
       });
 
       async function fetchAndDisplayPosts(){
@@ -224,8 +303,14 @@
 
                 for (let i = posts.length - 1; i >= 0; i--) {
                     const post = posts[i];
+                    // console.log(post.userNewPost)
+                    // console.log(post)
+
                     const postElement = document.createElement('div');
                     postElement.innerHTML = post.userNewPost;
+
+                    // console.log(postElement)
+
                     feedPost.appendChild(postElement);
                 }
 

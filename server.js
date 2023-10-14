@@ -33,7 +33,6 @@ const multer = require('multer');
 
 const upload = multer();
 // new add..
-const progressBar = require('progress')
 const bodyParser = require('body-parser');
 
 initializePassport(passport, getUserByEmail, getUserById); // passportConfiguration
