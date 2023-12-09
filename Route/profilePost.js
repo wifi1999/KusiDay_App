@@ -3,7 +3,7 @@ const dbConnect = require('../dbConnection.js');
 const profilePost = async (req, res) => {
     if (req.isAuthenticated()) {
       try { // add to database
-          console.log(req.body);
+          // console.log(req.body);
           const insertAvatar = async (client, newAvatar) => { 
               await client.db("user").collection("user_avatar").insertOne(newAvatar);
           };

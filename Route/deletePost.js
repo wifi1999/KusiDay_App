@@ -3,9 +3,10 @@ const dbConnect = require('../dbConnection.js');
 const deletePost = async(req, res) => {
     const client = await dbConnect();
     const deleteID = req.body.deleteID;
-    // console.log(deleteID);
-
+  
+  console.log(deleteID);
     const removePost = async (client, deleteID) => {
+        console.log(typeof deleteID);
         try{
             // console.log(deleteID);
             const deletePost = await client.db("user").collection("user_kusi_feed_post").deleteOne({ randID: deleteID });

@@ -1,37 +1,37 @@
 <script type="module">
     document.addEventListener("DOMContentLoaded", function() {
-      const feedsButton = document.getElementById("feeds");
-      const serverButton = document.getElementById("server");
-      const requesterButton = document.getElementById("requester");
-      const feedPost = document.querySelector(".feed-post");
-      const feedInput = document.querySelector(".feed-input");
-      const avatarDataInput = document.querySelector("#avatarData");
-      const status = document.querySelector("#status");
-      const mapLink = document.querySelector("#map-link");
-      const uploadedImage = document.querySelector("#image-upload");
-      const uploadedVideo = document.querySelector("#video-upload");
+      const feedsButton = document.getElementById("feeds"); // kusi feeds button
+      const serverButton = document.getElementById("server"); // kusi server button
+      const requesterButton = document.getElementById("requester"); // kusi client button
+      const feedPost = document.querySelector(".feed-post"); // outermost user post box
+      const feedInput = document.querySelector(".feed-input"); // user input text box
+      const avatarDataInput = document.querySelector("#avatarData"); // user avatar
+      const status = document.querySelector("#status"); 
+      const mapLink = document.querySelector("#map-link"); 
+      const uploadedImage = document.querySelector("#image-upload"); // user photo upload
+      const uploadedVideo = document.querySelector("#video-upload"); // user video upload
 
       function navigateToPage(page) {
           window.location.href = `./${page}`;
       }
   
+      // navigate between kusi-server, kusi-feed, and kusi-client
       feedsButton.addEventListener("click", () => navigateToPage("login"));
       serverButton.addEventListener("click", () => navigateToPage("kusi-server"));
       requesterButton.addEventListener("click", () => navigateToPage("kusi-client"));
 
-
-      async function appendUploadedFile(uploadedElement, className, parentElement) {
+      async function appendUploadedFile(uploadedElement, className, parentElement) { // if uploaded photo / video detected
           if (uploadedElement.files.length > 0) {
-              const file = uploadedElement.files[0];
-              const previewElement = document.createElement(file.type.startsWith("image/") ? "img" : "video");
-              previewElement.classList.add(className);
+              const file = uploadedElement.files[0]; // get the uploaded content
+              const previewElement = document.createElement(file.type.startsWith("image/") ? "img" : "video"); // choose correct content type
+              previewElement.classList.add(className); // add the correct type name
 
-              // Create a FileReader to read the image file
+              // Create a FileReader to read the content stored in the img or video tag
               const reader = new FileReader();
 
               // Define an event handler when the reading is done
               reader.onload = async function() {
-                  const base64Data = await reader.result;
+                  const base64Data = await reader.result; // this value is only valid when there is user input stored in the img or video
                 //   console.log(base64Data)
                 //   previewElement.src = base64Data;
                   previewElement.src = base64Data
@@ -51,11 +51,11 @@
 
               parentElement.appendChild(previewElement);
 
-            //   console.log(parentElement)
+              // console.log(parentElement)
 
-              uploadedElement.value = "";   
+              uploadedElement.value = ""; // clear the upload buffer for future upload content   
 
-              reader.readAsDataURL(file);
+              reader.readAsDataURL(file); // add the uploaded content to reader 
 
             //   if (file.type.startsWith("video/")){
             //      previewElement.setAttribute("controls", "true");
@@ -77,10 +77,13 @@
             //   } 
             //   parentElement.appendChild(previewElement);
             //   uploadedElement.value = "";
-        }
+      }
 
       async function savePostToLocalStorage(postHTML, randID){
         // console.log(postHTML)
+        console.log(randID);
+        console.log(typeof randID);
+
           try{
             const response = await fetch('/new-post', {
                 method: 'POST',
@@ -105,17 +108,31 @@
       }
   
       async function submitFeed() {
-          const feedContent = feedInput.value.trim();
+          const feedContent = feedInput.value.trim(); // get the user input post text 
           // new add...
-          const randID = Math.random();
+          const randID = localStorage.getItem("randID") === null ? Math.random() : localStorage.getItem("randID") ; // get a random user ID
+          localStorage.setItem("randID", randID.toString())
 
-          if (feedContent !== "") {
+        //   console.log(randID);
+        //   console.log("<%= avatar.userId %>");
+
+          const randID_original_user_string = "<%= avatar.userId %>".toString() + randID.toString(); // get the randID with the original user 
+        //   console.log(randID_original_user_string);
+          
+
+          if (feedContent !== "") { // execute only the user input is non-empty
             // new edited...
-            // const newFeedPost = await createFeedPost(feedContent, randID); // 1
-            const { newFeedPost, isImageUploaded, isVideoUploaded } = await createFeedPost(feedContent, randID);
+            // const newFeedPost = await createFeedPost(feedContent, randID); //
+
+            // completed uploading name, avatar, text, img / video, now deconstruct the return object
+            const { newFeedPost, isImageUploaded, isVideoUploaded } = await createFeedPost(feedContent, randID_original_user_string);
 
             // console.log(newFeedPost)
-            feedPost.insertBefore(newFeedPost, feedPost.firstChild);
+
+            // add the newly added to the top
+            feedPost.insertBefore(newFeedPost, feedPost.firstChild); 
+
+            // clear the user input box
             feedInput.value = "";
 
             // new edited... 
@@ -128,6 +145,7 @@
 
             // Wait for images to load before logging
 
+            // check if image uploaded 
             if(isImageUploaded){
                 const imagePromises = Array.from(newFeedPost.querySelectorAll("img")).map((img) =>
                 new Promise((resolve) => {
@@ -143,7 +161,9 @@
                         // console.log(newFeedPost.outerHTML);
                         // Log the src content after all images have loaded
                         // console.log(srcs);
-                        savePostToLocalStorage(newFeedPost.outerHTML, randID);
+
+                        // save user post to mongodb
+                        savePostToLocalStorage(newFeedPost.outerHTML, randID.toString());
                     })
                     .catch((error) => {
                         console.error("Error waiting for images to load:", error);
@@ -161,46 +181,46 @@
 
                 Promise.all(videoPromises)
                     .then((srcs) => {
-                        console.log(newFeedPost);
-                        console.log(newFeedPost.outerHTML);
+                        // console.log(newFeedPost);
+                        // console.log(newFeedPost.outerHTML);
                         // Log the src content after all images have loaded
-                        console.log(srcs);
-                        savePostToLocalStorage(newFeedPost.outerHTML, randID);
+                        // console.log(srcs);
+                        savePostToLocalStorage(newFeedPost.outerHTML, randID.toString());
                     })
                     .catch((error) => {
                         console.error("Error waiting for images to load:", error);
                     });
             }
-            }   
-            
+            }        
       }
           
       
-      async function createFeedPost(content, randID) {
-          const newFeedPost = document.createElement("div");
+      async function createFeedPost(content, randID) { // the first function called when submit button get clicked
+          const newFeedPost = document.createElement("div"); // the outermost of feed post
           newFeedPost.classList.add("feed-post-item");
           newFeedPost.style.backgroundColor = "#FFF5E1";
 
-          function createAvatarWithName() {
-              const avatar_with_name = document.createElement("div");
-              avatar_with_name.classList.add("avatar_with_name");
+          function createAvatarWithName() { // add avatar + name
+              const avatar_with_name = document.createElement("div"); // create outermost container for avatar + name
+              avatar_with_name.classList.add("avatar_with_name"); // create the class name for this container 
       
               if ("<%= avatar %>") {
-                  const userName = document.createElement("p");
-                  userName.classList.add("user-name");
+                  const userName = document.createElement("p"); // create paragraph p for name
+                  userName.classList.add("user-name"); // create class name for name
+                  // add the name if it exist 
                   userName.textContent = "<%= typeof avatar !== 'undefined' && avatar !== null ? avatar.name : '' %>";
                   userName.style.fontWeight = "bold";
 
                   function createAvatarImage() {
-                      const newAvatarImage = new Image();
-                      newAvatarImage.classList.add("small-avatar");
-                      newAvatarImage.src = "data:image/jpeg;base64," + avatarDataInput.value;
+                      const newAvatarImage = new Image(); // equivalent to document.createElement('img'). make outermost container for avatar
+                      newAvatarImage.classList.add("small-avatar"); // create class name for avatar
+                      newAvatarImage.src = "data:image/jpeg;base64," + avatarDataInput.value; // add the avatar content 
                       // new added....
                       const avatarButton = document.createElement("button")
                       avatarButton.style.border = "none"
                       avatarButton.style.background = "none"
                       avatarButton.appendChild(newAvatarImage)
-                    //   console.log(avatarButton)
+                      // console.log(avatarButton)
                       return avatarButton
                       // return newAvatarImage;
                   }
@@ -212,50 +232,68 @@
           }
   
           const avatar_with_name = createAvatarWithName(); // add avatar + name
-          if (avatarDataInput.value) {
-              newFeedPost.appendChild(avatar_with_name);
+          if (avatarDataInput.value) { // add to the outermost box only when avatar is presented
+              newFeedPost.appendChild(avatar_with_name); 
           }
     
-          const feedText = document.createElement("p");
-          feedText.textContent = content;
-          feedText.style.fontSize = "25px";
-          newFeedPost.appendChild(feedText);
+          const feedText = document.createElement("p"); // create paragraph for the user input text
+          feedText.textContent = content; // add the content for the user in[ut text
+          feedText.style.fontSize = "25px"; // adjust the user input text font
+          newFeedPost.appendChild(feedText); // add the user input text to the outermost box
 
-          const isImageUploaded = uploadedImage.files.length > 0;
-          const isVideoUploaded = uploadedVideo.files.length > 0;
+          const isImageUploaded = uploadedImage.files.length > 0; // check if there exist user upload photos
+          const isVideoUploaded = uploadedVideo.files.length > 0; // check if there exist user upload video
 
           if(isImageUploaded && isVideoUploaded){
               alert("Please upload either an image or a video, but not both.");
               return;
           }
-          else if(isImageUploaded){
+          else if(isImageUploaded){ // add the image if this exist 
               await appendUploadedFile(uploadedImage, "uploaded-image", newFeedPost); // 2
           }
-          else if(isVideoUploaded){
+          else if(isVideoUploaded){ // add hte video if this exist 
               await appendUploadedFile(uploadedVideo, "uploaded-video", newFeedPost);
           }
-
+          // inside the createFeedPost function
           function createButton(text, className, deleteIDStr, clickHandler) {
               const button = document.createElement("button");
-              button.textContent = text;
-              button.classList.add(className);
-              button.setAttribute("id", deleteIDStr);
-              if (clickHandler) {
+              button.textContent = text; // 'Delete'
+              button.classList.add(className); // 'delete-button'
+
+            //   console.log(deleteIDStr);
+              // console.log(curr_user_deleteIDStr);
+
+              
+              // id is name of attribute to be set, deletedIDStr is value to set 
+              button.setAttribute("id", deleteIDStr); // this is the randId
+              console.log(deleteIDStr); // Third
+              console.log(typeof deleteIDStr); // Third
+
+
+              // button.setAttribute("curr_id", curr_user_deleteIDStr); // this is the userId
+
+              if (clickHandler) { 
                 button.addEventListener("click", clickHandler);
               }
               return button;
           }
 
           function createDeleteButton(post, deleteID) {
-              const deleteIDStr = deleteID.toString();
-              return createButton("Delete", "delete-button", deleteIDStr, async () => {
+
+              console.log(deleteID.replace("<%= avatar.userId %>".toString(), '')); // second
+              console.log(typeof deleteID.replace("<%= avatar.userId %>".toString(), '')); // second
+
+
+              const extracted_randID = deleteID.replace("<%= avatar.userId %>".toString(), '');
+
+              return createButton("Delete", "delete-button", deleteID, async () => {
                   try{
                     const response = await fetch('delete-post', {
                         method: 'DELETE',
                         headers: {
                           'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ deleteID })
+                        body: JSON.stringify({ deleteID : extracted_randID }) // this is the newly generated random ID 
                     });
 
                     if(response.status === 200){
@@ -274,21 +312,26 @@
           }
     
           // new add...
-          const deleteID = randID;
+          const deleteID = randID; 
+
+          console.log(deleteID); // First 
+          console.log(typeof deleteID);
+ 
+          // const curr_user_deleteID = "<%= avatar.userId%>"; // this one is for the debug
 
           // modified...
-          const deleteButton = createDeleteButton(newFeedPost, deleteID);
-          newFeedPost.appendChild(deleteButton);
+          const deleteButton = createDeleteButton(newFeedPost, deleteID); // add the delete button
+          newFeedPost.appendChild(deleteButton); // add the delete button to the outermost post box
 
           // debug
-        //   console.log(newFeedPost)
+          //   console.log(newFeedPost)
     
-        //   return newFeedPost;
+          //   return newFeedPost;
 
           return {
-            newFeedPost: newFeedPost, 
-            isImageUploaded: isImageUploaded,
-            isVideoUploaded: isVideoUploaded
+            newFeedPost: newFeedPost,  // the outermost post box 
+            isImageUploaded: isImageUploaded, // check if image uploaded 
+            isVideoUploaded: isVideoUploaded // check if video uploaded 
           }
 
       }
@@ -350,38 +393,83 @@
                 // new add...
                 const deleteButton = document.querySelectorAll('.delete-button');
                 deleteButton.forEach((button) => {
-                    button.addEventListener('click', async () => {
-                       const deleteID = parseFloat(button.id);
-                       // new add...
-                       try{
-                          const response = await fetch('delete-post', {
-                              method: "DELETE",
-                              headers: { 'Content-Type': 'application/json' }, 
-                              body: JSON.stringify({ deleteID })
-                          });
+                    console.log(button.id);
+                    console.log(typeof button.id);
 
-                          if(response.status === 200){
-                              // feedPost.innerHTML = '';
-                              location.reload(); // refresh the browser page
-                              // alert('Post delete successfully');
-                          }
+                    console.log("<%= avatar.userId %>".toString());
+                    console.log(typeof "<%= avatar.userId %>".toString());
+
+                    console.log(button.id.replace("<%= avatar.userId %>".toString(), ''));
+                    console.log(typeof button.id.replace("<%= avatar.userId %>".toString(), ''));
+                    
+                    button.addEventListener('click', async () => {
+                    //    const deleteID = parseFloat(button.id); // here is the bug: will always get what the owner put as randID
+                    //    const prev_user_deleteID = parseFloat(button.curr_id);
+
+
+                          if(button.id.includes("<%= avatar.userId %>".toString())){
+                            const extracted_randID = button.id.replace("<%= avatar.userId %>".toString(), '');
+
+
+                            console.log(extracted_randID);
+                            console.log(typeof extracted_randID);
+                       
+                    //    if(parseFloat(button.ownerid) === "<%= avatar.userId %>"){
+                            try{
+                                const response = await fetch('delete-post', {
+                                    method: "DELETE",
+                                    headers: { 'Content-Type': 'application/json' }, 
+                                    body: JSON.stringify({ deleteID: extracted_randID })
+                                });
+
+                                if(response.status === 200){
+                                    // feedPost.innerHTML = '';
+                                    location.reload(); // refresh the browser page if successfully deleted 
+                                    // alert('Post delete successfully');
+                                }
+                                else{
+                                    alert('Error deleting posts');
+                                }
+                            }
+                            catch(err){
+                                console.error('Error deleting posts', err);
+                                alert('Error deleting posts');
+                            }
+                           }
                           else{
-                              alert('Error deleting posts');
+                            alert('You can only delete your own post');
                           }
-                       }
-                       catch(err){
-                          console.error('Error deleting posts', err);
-                          alert('Error deleting posts');
-                       }
+
+                    //    try{
+                    //       const response = await fetch('delete-post', {
+                    //           method: "DELETE",
+                    //           headers: { 'Content-Type': 'application/json' }, 
+                    //           body: JSON.stringify({ deleteID })
+                    //       });
+
+                    //       if(response.status === 200){
+                    //           // feedPost.innerHTML = '';
+                    //           location.reload(); // refresh the browser page if successfully deleted 
+                    //           // alert('Post delete successfully');
+                    //       }
+                    //       else{
+                    //           alert('Error deleting posts');
+                    //       }
+                    //    }
+                    //    catch(err){
+                    //       console.error('Error deleting posts', err);
+                    //       alert('Error deleting posts');
+                    //    }
                     });
+                // });
                 });
-           }
+            }
            catch(err){
                 console.error('Error retrieving user posts', err)
                 alert('Error retrieving user posts')
            }
       }
-      fetchAndDisplayPosts()
+      fetchAndDisplayPosts() // show all previously added user post 
   });
 </script>
 

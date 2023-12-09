@@ -1,21 +1,36 @@
 <body>
     <div class="logo-options">
+        <!-- the logo -->
         <%- include('Logo.ejs') %>
 
+        <!-- sign out button -->
         <form action="/logout?_method=DELETE" method="POST">
             <button type="submit" class="logout-btn">⎋</button>         
         </form>
 
+        <!-- location button -->
         <div class="location">
             <button id="find-me" class="fancy-button">📍</button>
             <p id="status"></p>
             <a id="map-link" target="_blank"></a>
         </div>
         
+        <!-- slogan -->
         <h2 class="slogan">Kusi Mate, Kusi Day~</h2>
         
+        <!-- notification button -->
         <a href="/notification" class="notification">🔔</a>
-        <a href="http://localhost:3001" class="message">💌</a>
+        <!-- message button -->
+        <a href="http://localhost:3002" class="message">💌</a>
+<!-- 
+        <script>
+            console.log('<%- avatar.userId %>'); // To check what value is being set     
+            console.log('<%- avatar.name %>');
+            console.log('<%- avatar.phone %>');
+            console.log('<%- avatar.email %>');
+            console.log('<%- avatar.address %>');
+            console.log('<%- avatar.contentType %>');
+        </script> -->
     </div>
 
     <div class="profile-friend">
@@ -24,14 +39,16 @@
                 <div class="profile-line">
                     <% if (avatar) { %>
                         <div class="avatar-name">
+                            <!-- user avatar -->
                             <img src="data:<%= avatar.contentType %>;base64,<%= avatar.data.toString('base64') %>"
                                 alt="Avatar" class="avatar-image">
                             <div class="profile-name">
+                                <!-- user name -->
                                 <%= avatar.name %>
                             </div>
                         </div>
                     <% } %>
-
+                        <!-- user profile page -->
                     <a href="/profile" class="profile">👤</a> <br>
 
                 </div>
@@ -43,8 +60,13 @@
                 <h3>Impression of your post: </h3>
                 <hr class="underline">
 
+                <!-- search button  -->
                 <a href="/search" class="search">🔍</a> <br><br><br><br><br><br><br><br>
-                <a href="/friend" class="friend">👥</a><br><br>
+                <!-- <a href="/friend" class="friend">👥</a><br><br> -->
+
+                <!-- friends button -->
+                <a href="http://localhost:3001" class="friend">👥</a><br><br>
+                
             </div>
             <div class="friend-frame"></div>
         </div>
@@ -52,18 +74,23 @@
         <div class="feed-ads">
             <div class="feed">
                 <div class="role">
+                    <!-- kusi server button -->
                     <button id="server" class="server">Kusi-Server</button>
+                    <!-- kusi feed button -->
                     <button id="feeds" class="feeds">Kusi-Feeds</button>
+                    <!-- kusi client button -->
                     <button id="requester" class="requester">Kusi-Client</button>
                 </div>
 
                 <div class="feed-frame">
                     <div class="avatar-feed">
                         <% if (avatar) { %>
+                            <!-- user avatar -->
                             <img src="data:<%= avatar.contentType %>;base64,<%= avatar.data.toString('base64') %>"
                                 alt="Avatar" class="avatar-image-feed">
                         <% } %>
                              
+                        <!-- user post input text -->
                             <input type="text" class="feed-input" placeholder="What's in your mind?">               
                             <button class="send-feed">Submit</button>
                     </div>
@@ -71,18 +98,23 @@
                  
                     <!-- <input type="file" id="image-upload" accept="image/*" /> -->
                     <!-- <input type="file" id="video-upload" accept="video/*" /> -->
+
+                    <!-- user post input photo -->
                     <input type="file" id="image-upload" accept=".jpg, .jpeg, .png" />
+                    <!-- user post input video -->
                     <input type="file" id="video-upload" accept=".mp4, .mov" />
                     
-
                     <hr class="underline">
                 </div>
 
+
                 <div class="feed-post" id="post-container"> 
+                    <!-- user post box -->
                     <input type="hidden" id="avatarData" value="<%= avatar ? avatar.data.toString('base64') : '' %>">
                 </div>
             </div>
 
+            <!-- ads section  -->
             <div>
                 <div class="ads-frame"></div>
             </div>

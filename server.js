@@ -1,5 +1,6 @@
 const express = require('express'); 
 const app = express(); 
+
 const dotenvConfig = require('dotenv').config(); 
 const passport = require('passport'); 
 const flash = require('express-flash'); 
@@ -32,7 +33,6 @@ const multer = require('multer');
 // })
 
 const upload = multer();
-// new add..
 const bodyParser = require('body-parser');
 
 initializePassport(passport, getUserByEmail, getUserById); // passportConfiguration
@@ -63,9 +63,7 @@ app.post('/new-post', checkAuthenticated, postPost);
 app.get('/getPosts', checkAuthenticated, getPost);
 app.delete('/delete-post', checkAuthenticated, deletePost);
 app.delete('/logout', logout);
-app.get('/favicon.ico', (req, res) => {
-    res.status(204)
-})
+app.get('/favicon.ico', (req, res) => { res.status(204) });
 app.listen(3000, () => console.log('Server listen on port 3000')); 
 
 
