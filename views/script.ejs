@@ -1,11 +1,11 @@
 <script type="module">
     document.addEventListener("DOMContentLoaded", function() {
-      const feedsButton = document.getElementById("feeds"); // kusi feeds button
-      const serverButton = document.getElementById("server"); // kusi server button
-      const requesterButton = document.getElementById("requester"); // kusi client button
-      const feedPost = document.querySelector(".feed-post"); // outermost user post box
-      const feedInput = document.querySelector(".feed-input"); // user input text box
-      const avatarDataInput = document.querySelector("#avatarData"); // user avatar
+      const feedsButton = document.getElementById("feeds"); 
+      const serverButton = document.getElementById("server");
+      const requesterButton = document.getElementById("requester"); 
+      const feedPost = document.querySelector(".feed-post"); 
+      const feedInput = document.querySelector(".feed-input"); 
+      const avatarDataInput = document.querySelector("#avatarData");
       const status = document.querySelector("#status"); 
       const mapLink = document.querySelector("#map-link"); 
       const uploadedImage = document.querySelector("#image-upload"); // user photo upload
@@ -32,17 +32,7 @@
               // Define an event handler when the reading is done
               reader.onload = async function() {
                   const base64Data = await reader.result; // this value is only valid when there is user input stored in the img or video
-                //   console.log(base64Data)
-                //   previewElement.src = base64Data;
                   previewElement.src = base64Data
-                //   await submitFeed()
-                //   console.log(previewElement)
-                             
-                //   parentElement.appendChild(previewElement);
-
-                //   console.log(parentElement)
-
-                //   uploadedElement.value = "";   
               };
 
               if (file.type.startsWith("video/")){
@@ -50,40 +40,12 @@
               }
 
               parentElement.appendChild(previewElement);
-
-              // console.log(parentElement)
-
               uploadedElement.value = ""; // clear the upload buffer for future upload content   
-
               reader.readAsDataURL(file); // add the uploaded content to reader 
-
-            //   if (file.type.startsWith("video/")){
-            //      previewElement.setAttribute("controls", "true");
-            //   } 
-
-            //   parentElement.appendChild(previewElement);
-            //   uploadedElement.value = "";   
           };
-
-              // console.log(previewElement)
-
-              // Read the image file as a data URL (base64 encoding)
-            //   reader.readAsDataURL(file);
-
-              // previewElement.src = URL.createObjectURL(file);
-              
-            //   if (file.type.startsWith("video/")){
-            //       previewElement.setAttribute("controls", "true");
-            //   } 
-            //   parentElement.appendChild(previewElement);
-            //   uploadedElement.value = "";
       }
 
       async function savePostToLocalStorage(postHTML, randID){
-        // console.log(postHTML)
-        console.log(randID);
-        console.log(typeof randID);
-
           try{
             const response = await fetch('/new-post', {
                 method: 'POST',
@@ -93,7 +55,6 @@
 
              if(response.status === 200){
                 const result = await response.json();
-                // alert(result.message)
              }
              else{
                 console.log('Response status', response.status)
@@ -110,15 +71,12 @@
       async function submitFeed() {
           const feedContent = feedInput.value.trim(); // get the user input post text 
           // new add...
-          const randID = localStorage.getItem("randID") === null ? Math.random() : localStorage.getItem("randID") ; // get a random user ID
+        //   const randID = localStorage.getItem("randID") === null ? Math.random() : localStorage.getItem("randID") ; // get a random user ID
+          // debug
+          const randID = Math.random(); // get a random user ID
           localStorage.setItem("randID", randID.toString())
 
-        //   console.log(randID);
-        //   console.log("<%= avatar.userId %>");
-
           const randID_original_user_string = "<%= avatar.userId %>".toString() + randID.toString(); // get the randID with the original user 
-        //   console.log(randID_original_user_string);
-          
 
           if (feedContent !== "") { // execute only the user input is non-empty
             // new edited...
@@ -126,8 +84,6 @@
 
             // completed uploading name, avatar, text, img / video, now deconstruct the return object
             const { newFeedPost, isImageUploaded, isVideoUploaded } = await createFeedPost(feedContent, randID_original_user_string);
-
-            // console.log(newFeedPost)
 
             // add the newly added to the top
             feedPost.insertBefore(newFeedPost, feedPost.firstChild); 
@@ -157,11 +113,6 @@
 
                 Promise.all(imagePromises)
                     .then((srcs) => {
-                        // console.log(newFeedPost);
-                        // console.log(newFeedPost.outerHTML);
-                        // Log the src content after all images have loaded
-                        // console.log(srcs);
-
                         // save user post to mongodb
                         savePostToLocalStorage(newFeedPost.outerHTML, randID.toString());
                     })
@@ -181,10 +132,6 @@
 
                 Promise.all(videoPromises)
                     .then((srcs) => {
-                        // console.log(newFeedPost);
-                        // console.log(newFeedPost.outerHTML);
-                        // Log the src content after all images have loaded
-                        // console.log(srcs);
                         savePostToLocalStorage(newFeedPost.outerHTML, randID.toString());
                     })
                     .catch((error) => {
@@ -259,18 +206,11 @@
               const button = document.createElement("button");
               button.textContent = text; // 'Delete'
               button.classList.add(className); // 'delete-button'
-
-            //   console.log(deleteIDStr);
-              // console.log(curr_user_deleteIDStr);
-
               
               // id is name of attribute to be set, deletedIDStr is value to set 
               button.setAttribute("id", deleteIDStr); // this is the randId
               console.log(deleteIDStr); // Third
               console.log(typeof deleteIDStr); // Third
-
-
-              // button.setAttribute("curr_id", curr_user_deleteIDStr); // this is the userId
 
               if (clickHandler) { 
                 button.addEventListener("click", clickHandler);
@@ -282,7 +222,6 @@
 
               console.log(deleteID.replace("<%= avatar.userId %>".toString(), '')); // second
               console.log(typeof deleteID.replace("<%= avatar.userId %>".toString(), '')); // second
-
 
               const extracted_randID = deleteID.replace("<%= avatar.userId %>".toString(), '');
 
@@ -298,7 +237,6 @@
 
                     if(response.status === 200){
                         feedPost.removeChild(post);
-                        // alert('Post deleted successfully');
                     }
                     else{
                         alert('Error deleting post')
@@ -311,22 +249,14 @@
               });
           }
     
-          // new add...
           const deleteID = randID; 
 
           console.log(deleteID); // First 
           console.log(typeof deleteID);
- 
-          // const curr_user_deleteID = "<%= avatar.userId%>"; // this one is for the debug
 
           // modified...
           const deleteButton = createDeleteButton(newFeedPost, deleteID); // add the delete button
           newFeedPost.appendChild(deleteButton); // add the delete button to the outermost post box
-
-          // debug
-          //   console.log(newFeedPost)
-    
-          //   return newFeedPost;
 
           return {
             newFeedPost: newFeedPost,  // the outermost post box 
@@ -379,42 +309,19 @@
 
                 for (let i = posts.length - 1; i >= 0; i--) {
                     const post = posts[i];
-                    // console.log(post.userNewPost)
-                    // console.log(post)
-
                     const postElement = document.createElement('div');
                     postElement.innerHTML = post.userNewPost;
-
-                    // console.log(postElement)
-
                     feedPost.appendChild(postElement);
                 }
 
                 // new add...
-                const deleteButton = document.querySelectorAll('.delete-button');
-                deleteButton.forEach((button) => {
-                    console.log(button.id);
-                    console.log(typeof button.id);
-
-                    console.log("<%= avatar.userId %>".toString());
-                    console.log(typeof "<%= avatar.userId %>".toString());
-
-                    console.log(button.id.replace("<%= avatar.userId %>".toString(), ''));
-                    console.log(typeof button.id.replace("<%= avatar.userId %>".toString(), ''));
-                    
+                const deleteButton = document.querySelectorAll('.delete-button');     
+                   
+                deleteButton.forEach((button) => {       
                     button.addEventListener('click', async () => {
-                    //    const deleteID = parseFloat(button.id); // here is the bug: will always get what the owner put as randID
-                    //    const prev_user_deleteID = parseFloat(button.curr_id);
-
-
                           if(button.id.includes("<%= avatar.userId %>".toString())){
                             const extracted_randID = button.id.replace("<%= avatar.userId %>".toString(), '');
-
-
-                            console.log(extracted_randID);
-                            console.log(typeof extracted_randID);
                        
-                    //    if(parseFloat(button.ownerid) === "<%= avatar.userId %>"){
                             try{
                                 const response = await fetch('delete-post', {
                                     method: "DELETE",
@@ -425,7 +332,6 @@
                                 if(response.status === 200){
                                     // feedPost.innerHTML = '';
                                     location.reload(); // refresh the browser page if successfully deleted 
-                                    // alert('Post delete successfully');
                                 }
                                 else{
                                     alert('Error deleting posts');
