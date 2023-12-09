@@ -18,7 +18,7 @@ function FriendsPage() {
 
     const handleSearchChange = (e) => { // event object passed to event handler, contains info for type of event 
         setSearchTerm(e.target.value); // target is the DOM element that trigger the event, in this example, is the input filed, value of ht einput field 
-    };
+    };``
 
     const addFriend = (user) => {
         setFriends(prevFriends => [...prevFriends, user]);
