@@ -71,7 +71,7 @@
       async function submitFeed() {
           const feedContent = feedInput.value.trim(); // get the user input post text 
           // new add...
-        //   const randID = localStorage.getItem("randID") === null ? Math.random() : localStorage.getItem("randID") ; // get a random user ID
+          //  const randID = localStorage.getItem("randID") === null ? Math.random() : localStorage.getItem("randID") ; // get a random user ID
           // debug
           const randID = Math.random(); // get a random user ID
           localStorage.setItem("randID", randID.toString())
@@ -79,10 +79,6 @@
           const randID_original_user_string = "<%= avatar.userId %>".toString() + randID.toString(); // get the randID with the original user 
 
           if (feedContent !== "") { // execute only the user input is non-empty
-            // new edited...
-            // const newFeedPost = await createFeedPost(feedContent, randID); //
-
-            // completed uploading name, avatar, text, img / video, now deconstruct the return object
             const { newFeedPost, isImageUploaded, isVideoUploaded } = await createFeedPost(feedContent, randID_original_user_string);
 
             // add the newly added to the top
@@ -91,15 +87,7 @@
             // clear the user input box
             feedInput.value = "";
 
-            // new edited... 
-
-            // debug
-            // console.log(newFeedPost)
-            // console.log(newFeedPost.outerHTML)
-
             // savePostToLocalStorage(newFeedPost.outerHTML, randID);
-
-            // Wait for images to load before logging
 
             // check if image uploaded 
             if(isImageUploaded){
@@ -137,6 +125,9 @@
                     .catch((error) => {
                         console.error("Error waiting for images to load:", error);
                     });
+            }
+            else{
+                savePostToLocalStorage(newFeedPost.outerHTML, randID.toString());
             }
             }        
       }
